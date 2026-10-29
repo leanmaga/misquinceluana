@@ -1,0 +1,17 @@
+{
+  "name": "luana-xv",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3015",
+    "build": "next build",
+    "start": "next start -p 3015"
+  },
+  "dependencies": {
+    "next": "15.5.28",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "three": "0.186.1",
+    "gsap": "3.12.5"
+  }
+}

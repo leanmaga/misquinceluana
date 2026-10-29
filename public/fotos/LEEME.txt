@@ -1,0 +1,2 @@
+Agregá tus fotos en esta carpeta y sus rutas en ../invitacion.json.
+Ejemplo: "photos": ["/fotos/luana-01.jpg", "/fotos/luana-02.jpg"]
