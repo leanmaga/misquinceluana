@@ -1,15 +1,141 @@
 'use client';
-import { useEffect } from 'react';
-import { initialize } from './experience';
-export default function Home() {
-  useEffect(() => { let dispose; let cancelled=false; fetch('/invitacion.json').then(r=>r.json()).then(config=>{if(!cancelled) dispose=initialize(config);}).catch(()=>{document.querySelectorAll('.form-status').forEach(el=>{el.textContent='No se pudo cargar la configuración. Recargá la página para volver a intentar.';});}); return()=>{cancelled=true;dispose?.();}; }, []);
-  return <><div id="scene" aria-hidden="true"></div><div className="grain"></div><header><a className="monogram" href="#inicio" aria-label="Luana, inicio">L<span>✧</span></a><nav><a href="#historia">La noche</a><a href="#recuerdos">Recuerdos</a><a href="#ubicacion">Cómo llegar</a></nav><a className="nav-rsvp" href="#rsvp">Confirmar asistencia <span>↗</span></a></header>
-<main><section id="inicio" className="hero"><div className="hero-top"><p className="eyebrow">UNA NOCHE PARA CREER EN LA MAGIA</p><h1>Luana</h1><div className="xv"><span></span> MIS QUINCE <span></span></div></div><div className="hero-bottom"><p>Hay sueños que merecen<br/>una noche <em>inolvidable.</em></p><a className="scroll" href="#historia"><span>↓</span> DESLIZÁ Y DEJATE LLEVAR</a><div className="hero-note">Entre luces y nenúfares,<br/>comienza mi historia.<span>✦</span></div></div></section>
-<section id="historia" className="story section"><div className="story-copy reveal"><p className="eyebrow">CAPÍTULO I · EL SUEÑO</p><h2>La magia existe.<br/><em>Y quiero compartirla<br/>con vos.</em></h2><p>Quince años de historias, de abrazos y de sueños. Hoy empieza un nuevo capítulo, y no sería lo mismo sin las personas que iluminan mi vida.</p><p>Te invito a una noche donde el tiempo se detiene y los sueños salen a bailar.</p><span className="signature">Con amor, Luana</span></div></section>
-<section className="countdown section" id="noche"><div className="reveal"><p className="eyebrow">CAPÍTULO II · EL GRAN MOMENTO</p><h2>Falta poquito para<br/><em>vivir este cuento.</em></h2><p id="event-date">La fecha de esta noche mágica se anunciará pronto.</p><div className="timer" aria-label="Cuenta regresiva"><div><b id="days">—</b><span>DÍAS</span></div><i>:</i><div><b id="hours">—</b><span>HORAS</span></div><i>:</i><div><b id="minutes">—</b><span>MINUTOS</span></div><i>:</i><div><b id="seconds">—</b><span>SEGUNDOS</span></div></div><p className="small">Una noche. Mil recuerdos. Vos, conmigo.</p></div></section>
-<section id="recuerdos" className="gallery section"><div className="section-heading reveal"><div><p className="eyebrow">CAPÍTULO III · MI HISTORIA</p><h2>Pequeños instantes,<br/><em>grandes recuerdos.</em></h2></div><p>Un poquito de mí,<br/>antes de esta gran noche.</p></div><div className="photos" id="photos"><div className="photo p1"><span>01</span><div>✧<p>Una vida de sueños</p><small>Pronto, mis fotos favoritas</small></div></div><div className="photo p2"><span>02</span><div>❋<p>Mi propia magia</p><small>Pronto, mis fotos favoritas</small></div></div><div className="photo p3"><span>03</span><div>✦<p>Lo mejor está por venir</p><small>Pronto, mis fotos favoritas</small></div></div></div></section>
-<section className="participate section" id="rsvp"><div className="reveal"><p className="eyebrow">CAPÍTULO IV · SOS PARTE DEL CUENTO</p><h2>Mi noche es más linda<br/><em>si estás vos.</em></h2><p>Reservá un lugar en esta historia.<br/>¡Me encantaría que me acompañes!</p><form id="rsvp-form"><label>Tu nombre y apellido<input name="name" autoComplete="name" placeholder="¿Cómo te llamás?" required maxLength="100" /></label><div className="form-row"><label>¿Venís a celebrar?<select name="attendance"><option>¡Sí, ahí estaré!</option><option>No podré asistir</option></select></label><label>Personas<select name="guests"><option>1 persona</option><option>2 personas</option><option>3 personas</option><option>4 personas</option></select></label></div><label>¿Algo que deba saber?<input name="notes" placeholder="Alimentación especial o un mensajito" maxLength="400" /></label><button type="submit">Confirmar por WhatsApp <span>↗</span></button><p className="form-status" role="status"></p></form></div><div className="song reveal"><span className="record">♫</span><p className="eyebrow">LA BANDA SONORA DE MI NOCHE</p><h3>Si suena esta canción,<br/><em>salimos a bailar.</em></h3><p>¿Cuál no puede faltar en la pista?<br/>Dejame ese tema que nos hace cantar a todo volumen.</p><form id="song-form"><label>Canción<input name="song" placeholder="Nombre de la canción" required maxLength="120" /></label><label>Artista<input name="artist" placeholder="¿Quién la canta?" required maxLength="120" /></label><button type="submit" className="outline">Sugerir por WhatsApp <span>↗</span></button><p className="form-status" role="status"></p></form></div></section>
-<section id="ubicacion" className="location section"><div className="map-art" aria-hidden="true"><div className="map-river"></div><span className="pin">✧</span><span className="map-label">EL LUGAR DONDE<br/>COMIENZA LA MAGIA</span></div><div className="reveal"><p className="eyebrow">CAPÍTULO V · NUESTRO ENCUENTRO</p><h2>Todos los caminos<br/><em>llevan a esta noche.</em></h2><h3 id="venue">Salón por confirmar</h3><p id="address">Muy pronto vas a encontrar acá la dirección del festejo.</p><div className="map-buttons"><a id="google" className="button" aria-disabled="true">Google Maps ↗</a><a id="waze" className="button outline" aria-disabled="true">Waze ↗</a></div></div></section>
-<footer><p className="eyebrow">Y ASÍ COMIENZA UN NUEVO CAPÍTULO…</p><a href="#inicio">Luana<span>✧</span></a><p>Mis quince · Una noche encantada</p><small>Hecho de sueños, luz y un poquito de magia.</small></footer></main><dialog id="lightbox"><button aria-label="Cerrar galería">×</button><img alt="Recuerdo de Luana" /></dialog><noscript>Activá JavaScript para ver la princesa 3D y usar los formularios.</noscript></>; }
 
+import { useEffect, useRef, useState } from 'react';
+import { initialize } from './experience';
+
+const safeSource = value => typeof value === 'string' && (/^\/(?!\/)/.test(value) || /^https:\/\//.test(value));
+
+function Heading({ title, accent }) {
+  return <h2>{title}<br /><em>{accent}</em></h2>;
+}
+
+function Countdown({ date, timezone, locale }) {
+  const [remaining, setRemaining] = useState(null);
+  const target = Date.parse(date);
+  useEffect(() => {
+    if (!Number.isFinite(target)) return;
+    const tick = () => setRemaining(Math.max(0, Math.floor((target - Date.now()) / 1000)));
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [target]);
+  const units = remaining === null ? ['—', '—', '—', '—'] : [Math.floor(remaining / 86400), Math.floor(remaining / 3600) % 24, Math.floor(remaining / 60) % 60, remaining % 60];
+  return <>
+    <p id="event-date">{Number.isFinite(target) ? new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeStyle: 'short', hourCycle: 'h23', timeZone: timezone }).format(new Date(target)) + ' hs' : 'Fecha por confirmar'}</p>
+    <div className="timer" aria-label="Cuenta regresiva">
+      {units.map((value, i) => <div key={i}><b>{String(value).padStart(2, '0')}</b><span>{['DÍAS', 'HORAS', 'MINUTOS', 'SEGUNDOS'][i]}</span></div>)}
+    </div>
+    <p className="small">{remaining === 0 ? '¡Llegó el día de celebrar!' : 'Una noche. Mil recuerdos. Vos, conmigo.'}</p>
+  </>;
+}
+
+function Music({ music }) {
+  const [opened, setOpened] = useState(false);
+  if (!music?.enabled) return null;
+  const localAudio = safeSource(music.src);
+  const videoId = /^[a-zA-Z0-9_-]{11}$/.test(music.youtubeId || '') ? music.youtubeId : null;
+  return <aside className="music-widget" aria-label="Música de la invitación">
+    {opened && <div className="music-panel" id="music-panel">
+      <div className="music-heading"><div><strong>{music.title}</strong><small>{music.artist}</small></div><button type="button" onClick={() => setOpened(false)} aria-label="Cerrar y detener música">×</button></div>
+      {localAudio ? <audio controls autoPlay loop src={music.src}>Tu navegador no admite audio.</audio> : videoId ? <><iframe title={music.title} src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&loop=1&playlist=${videoId}`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /><a href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer">Escuchar en YouTube ↗</a></> : <p>La música estará disponible pronto.</p>}
+    </div>}
+    <button className="music-toggle" type="button" aria-expanded={opened} aria-controls={opened ? 'music-panel' : undefined} onClick={() => setOpened(!opened)}><span aria-hidden="true">♫</span>{opened ? 'Cerrar música' : 'Escuchar la magia'}</button>
+  </aside>;
+}
+
+function ReplyForm({ config, kind }) {
+  const [status, setStatus] = useState('');
+  function submit(event) {
+    event.preventDefault();
+    const phone = String(config.whatsapp || '').replace(/\D/g, '');
+    if (!phone) { setStatus('Pronto habilitaremos los envíos. Todavía no se envió tu respuesta.'); return; }
+    const data = new FormData(event.currentTarget);
+    const message = kind === 'rsvp'
+      ? `¡Hola ${config.name}! Soy ${data.get('name')}. ${data.get('attendance')} (${data.get('guests')}). ${data.get('notes') || ''}`
+      : `¡${config.name}! Quiero bailar ${data.get('song')} de ${data.get('artist')}.`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+    setStatus(`Terminá el envío en WhatsApp para que ${config.name} reciba tu mensaje.`);
+  }
+  return <form onSubmit={submit} id={`${kind}-form`}>
+    {kind === 'rsvp' ? <>
+      <label>Tu nombre y apellido<input name="name" autoComplete="name" placeholder="¿Cómo te llamás?" required maxLength={100} /></label>
+      <div className="form-row"><label>¿Venís a celebrar?<select name="attendance"><option>¡Sí, ahí estaré!</option><option>No podré asistir</option></select></label><label>Personas<select name="guests">{[1, 2, 3, 4].map(n => <option key={n}>{n} {n === 1 ? 'persona' : 'personas'}</option>)}</select></label></div>
+      <label>¿Algo que deba saber?<input name="notes" placeholder="Alimentación especial o un mensajito" maxLength={400} /></label>
+    </> : <><label>Canción<input name="song" placeholder="Nombre de la canción" required maxLength={120} /></label><label>Artista<input name="artist" placeholder="¿Quién la canta?" required maxLength={120} /></label></>}
+    <button type="submit" className={kind === 'song' ? 'outline' : ''}>{kind === 'rsvp' ? 'Confirmar por WhatsApp' : 'Sugerir por WhatsApp'} <span>↗</span></button>
+    <p className="form-status" role="status">{status}</p>
+  </form>;
+}
+
+function Gifts({ gifts }) {
+  const [status, setStatus] = useState('');
+  if (!gifts?.enabled) return null;
+  const active = gifts.active === true && !!gifts.alias?.trim();
+  async function copyAlias() {
+    if (!active) return;
+    try { await navigator.clipboard.writeText(gifts.alias); setStatus('Alias copiado. ¡Gracias por ser parte de este sueño!'); }
+    catch { setStatus('No se pudo copiar automáticamente. Podés seleccionar y copiar el alias que aparece arriba.'); }
+  }
+  return <section className="gifts section" id="regalos"><div className="gift-flower" aria-hidden="true">❋</div><div className="reveal">
+    <p className="eyebrow">UN DETALLE CON MUCHO AMOR</p><Heading title={gifts.title} accent={gifts.subtitle} /><p className="gift-message">{gifts.message}</p>
+    <div className={`gift-account ${active ? '' : 'pending'}`}><span>{gifts.provider}</span><strong>{gifts.alias || 'Alias por confirmar'}</strong>{gifts.recipient && <small>Titular: {gifts.recipient}</small>}<button type="button" onClick={copyAlias} disabled={!active}>{active ? 'Copiar alias ↗' : 'Alias de ejemplo · No habilitado'}</button></div>
+    {!active && <p className="gift-pending">{gifts.pendingMessage}</p>}<p role="status" className="form-status">{status}</p>
+  </div></section>;
+}
+
+function Invitation({ config }) {
+  const dialog = useRef(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const copy = config.copy;
+  useEffect(() => {
+    document.title = `${config.name} · ${config.celebration}`;
+    return initialize(config);
+  }, [config]);
+  function openPhoto(photo) { setSelectedPhoto(photo); dialog.current.showModal(); }
+  const query = encodeURIComponent(config.address || '');
+  return <>
+    <div id="scene" aria-hidden="true" /><div className="grain" />
+    <header><a className="monogram" href="#inicio" aria-label={`${config.name}, inicio`}>{config.name.slice(0, 1)}<span>✧</span></a><nav><a href="#historia">La noche</a><a href="#recuerdos">Mi historia</a><a href="#ubicacion">Cómo llegar</a>{config.gifts?.enabled && <a href="#regalos">Regalos</a>}</nav><a className="nav-rsvp" href="#rsvp">Confirmar asistencia <span>↗</span></a></header>
+    <main>
+      <section id="inicio" className="hero"><div className="hero-top"><p className="eyebrow">{copy.heroEyebrow}</p><h1>{config.name}</h1><div className="xv"><span />{config.celebration.toUpperCase()}<span /></div></div><div className="hero-bottom"><p>{copy.heroQuote}</p><a className="scroll" href="#historia"><span>↓</span> DESLIZÁ Y DEJATE LLEVAR</a><div className="hero-note">{copy.heroNote}<span>✦</span></div></div></section>
+      <section id="historia" className="story section"><div className="story-copy reveal"><p className="eyebrow">EL SUEÑO</p><Heading title={copy.storyTitle} accent={copy.storyAccent} />{copy.storyParagraphs.map((text, i) => <p key={i}>{text}</p>)}<span className="signature">Con amor, {config.name}</span></div></section>
+      <section id="recuerdos" className="memory-journey">
+        <div className="journey-intro section"><p className="eyebrow">{copy.timelineEyebrow}</p><Heading title={copy.timelineTitle} accent={copy.timelineAccent} /><p>{copy.timelineIntro}</p><span className="journey-star" aria-hidden="true">✧</span></div>
+        <div className="timeline-path" id="timeline-path"><div className="timeline-line" aria-hidden="true"><div className="timeline-fill" /></div>
+          {config.timeline.map((chapter, i) => <article className={`memory-step ${i % 2 ? 'right' : 'left'}`} key={i} data-step={i}>
+            <div className="memory-marker" aria-hidden="true">{String(i + 1).padStart(2, '0')}</div>
+            <div className="memory-card"><p className="eyebrow">{chapter.label}</p><h3>{chapter.title}</h3><div className={`memory-photos count-${chapter.photos.length}`}>
+              {chapter.photos.filter(photo => safeSource(photo.src)).map((photo, j) => <button className="memory-photo" key={photo.src} onClick={() => openPhoto(photo)} aria-label={`Ampliar: ${photo.alt}`}><img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" style={{ objectPosition: photo.position || '50% 50%' }} /><span aria-hidden="true">↗</span></button>)}
+            </div><p className="memory-caption">{chapter.description}</p><span className="memory-ornament" aria-hidden="true">✦</span></div>
+          </article>)}
+        </div><div className="journey-end"><span>✧</span><p>Y ahora… vamos a celebrar.</p><a href="#noche" className="scroll"><span>↓</span> LA PRÓXIMA PÁGINA</a></div>
+      </section>
+      <section className="countdown section" id="noche"><div className="reveal"><p className="eyebrow">EL GRAN MOMENTO</p><Heading title={copy.countdownTitle} accent={copy.countdownAccent} /><Countdown date={config.date} timezone={config.timezone} locale={config.locale} /></div></section>
+      <section id="ubicacion" className="location section"><div className="map-art" aria-hidden="true"><div className="map-river" /><span className="pin">✧</span><span className="map-label">EL LUGAR DONDE<br />COMIENZA LA MAGIA</span></div><div className="reveal"><p className="eyebrow">NUESTRO ENCUENTRO</p><Heading title={copy.locationTitle} accent={copy.locationAccent} /><h3>{config.venue}</h3><p>{config.address}</p><div className="map-buttons">{config.address ? <><a className="button" href={`https://www.google.com/maps/search/?api=1&query=${query}`} target="_blank" rel="noopener noreferrer">Google Maps ↗</a><a className="button outline" href={`https://waze.com/ul?q=${query}&navigate=yes`} target="_blank" rel="noopener noreferrer">Waze ↗</a></> : <p>Dirección por confirmar</p>}</div></div></section>
+      <section className="participate section" id="rsvp"><div className="reveal"><p className="eyebrow">SOS PARTE DEL CUENTO</p><Heading title={copy.rsvpTitle} accent={copy.rsvpAccent} /><p>{copy.rsvpMessage}</p><ReplyForm config={config} kind="rsvp" /></div><div className="song reveal"><span className="record" aria-hidden="true">♫</span><p className="eyebrow">LA BANDA SONORA DE MI NOCHE</p><h3>{copy.songTitle}<br /><em>{copy.songAccent}</em></h3><p>{copy.songMessage}</p><ReplyForm config={config} kind="song" /></div></section>
+      <Gifts gifts={config.gifts} />
+      <footer><p className="eyebrow">{copy.footerEyebrow}</p><a href="#inicio">{config.name}<span>✧</span></a><p>{config.celebration} · Una noche encantada</p><small>{copy.footerNote}</small></footer>
+    </main>
+    <Music music={config.music} />
+    <dialog ref={dialog} id="lightbox" aria-label="Recuerdo ampliado" onClick={event => { if (event.target === event.currentTarget) dialog.current.close(); }}><button aria-label="Cerrar galería" onClick={() => dialog.current.close()}>×</button>{selectedPhoto && <img src={selectedPhoto.src} alt={selectedPhoto.alt} />}</dialog>
+  </>;
+}
+
+export default function Home() {
+  const [config, setConfig] = useState(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/invitacion.json', { cache: 'no-store', signal: controller.signal }).then(response => {
+      if (!response.ok) throw new Error('No se pudo cargar la invitación');
+      return response.json();
+    }).then(data => {
+      if (!data.name || !data.copy || !Array.isArray(data.timeline)) throw new Error('Revisá invitacion.json');
+      setConfig(data);
+    }).catch(error => { if (error.name !== 'AbortError') setFailed(true); });
+    return () => controller.abort();
+  }, []);
+  if (!config) return <main className="loading-invitation"><span>✧</span><p>{failed ? 'No pudimos abrir la invitación. Revisá la configuración e intentá de nuevo.' : 'La magia está por comenzar…'}</p>{failed && <button onClick={() => window.location.reload()}>Volver a intentar</button>}<noscript>Activá JavaScript para abrir la invitación.</noscript></main>;
+  return <Invitation config={config} />;
+}
 

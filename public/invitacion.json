@@ -1,1 +1,61 @@
-{"date":"2027-03-20T21:00:00-03:00","venue":"Palacio de los Nenúfares","address":"Buenos Aires, Argentina","whatsapp":"","demo":true,"photos":[]}
+{
+  "name": "Luana",
+  "age": 15,
+  "celebration": "Mis quince",
+  "date": "2027-12-11T21:00:00-03:00",
+  "timezone": "America/Argentina/Buenos_Aires",
+  "locale": "es-AR",
+  "venue": "Essence Palace eventos",
+  "address": "Av. Presidente Perón 7030, Martín Coronado, Buenos Aires, Argentina",
+  "whatsapp": "",
+  "demo": false,
+  "music": {
+    "enabled": true,
+    "title": "Ma Belle Evangeline",
+    "artist": "Arturo Mercado · La princesa y el sapo",
+    "youtubeId": "SbBWXfft7IM",
+    "src": ""
+  },
+  "gifts": {
+    "enabled": true,
+    "title": "Tu presencia es mi mejor regalo.",
+    "subtitle": "Y si querés regalarme un sueño…",
+    "message": "Lo más importante es compartir esta noche con vos. Si no sabés qué regalarme, podés ayudarme a cumplir mis próximos sueños con una transferencia.",
+    "provider": "Mercado Pago",
+    "alias": "LUANA.XV.EJEMPLO",
+    "recipient": "",
+    "active": false,
+    "pendingMessage": "Este alias es de ejemplo. La cuenta todavía no está habilitada: por favor, no hagas transferencias. Pronto compartiremos el alias definitivo."
+  },
+  "copy": {
+    "heroEyebrow": "UNA NOCHE PARA CREER EN LA MAGIA",
+    "heroQuote": "Hay sueños que merecen una noche inolvidable.",
+    "heroNote": "Entre luces y nenúfares, comienza mi historia.",
+    "storyTitle": "La magia existe.",
+    "storyAccent": "Y quiero compartirla con vos.",
+    "storyParagraphs": ["Quince años de historias, de abrazos y de sueños. Hoy empieza un nuevo capítulo, y no sería lo mismo sin las personas que iluminan mi vida.", "Te invito a una noche donde el tiempo se detiene y los sueños salen a bailar."],
+    "timelineEyebrow": "UN CAMINO LLENO DE LUZ",
+    "timelineTitle": "Así empezó mi cuento.",
+    "timelineAccent": "Y todavía queda tanto por soñar.",
+    "timelineIntro": "De mis primeros descubrimientos a esta noche que tanto soñé. Acompañame a recorrer los recuerdos que me trajeron hasta acá.",
+    "countdownTitle": "Falta poquito para",
+    "countdownAccent": "vivir este cuento.",
+    "rsvpTitle": "Mi noche es más linda",
+    "rsvpAccent": "si estás vos.",
+    "rsvpMessage": "Reservá un lugar en esta historia. ¡Me encantaría que me acompañes!",
+    "songTitle": "Si suena esta canción,",
+    "songAccent": "salimos a bailar.",
+    "songMessage": "¿Cuál no puede faltar en la pista? Dejame ese tema que nos hace cantar a todo volumen.",
+    "locationTitle": "Todos los caminos",
+    "locationAccent": "llevan a esta noche.",
+    "footerEyebrow": "Y ASÍ COMIENZA UN NUEVO CAPÍTULO…",
+    "footerNote": "Hecho de sueños, luz y un poquito de magia."
+  },
+  "timeline": [
+    {"label":"El comienzo", "title":"Mis primeros destellos", "description":"Un mundo por descubrir, miradas curiosas y todo el amor que me acompañó desde el principio.", "photos":[{"src":"/fotos/luana10.jpeg","alt":"Uno de mis primeros recuerdos","position":"50% 45%"},{"src":"/fotos/luana9.jpeg","alt":"Descubriendo el mundo en mi andador","position":"50% 40%"}]},
+    {"label":"Pequeños descubrimientos", "title":"La magia de crecer", "description":"Entre juegos, risas y pequeñas aventuras, mi historia empezaba a llenarse de colores.", "photos":[{"src":"/fotos/luana7.jpeg","alt":"Un recuerdo de mi infancia en el cochecito","position":"50% 40%"},{"src":"/fotos/luana8.jpeg","alt":"Explorando el jardín de pequeña","position":"50% 45%"}]},
+    {"label":"Una infancia para atesorar", "title":"Sueños cada vez más grandes", "description":"Esos días que se guardan para siempre. Sonrisas, paseos y momentos que siguen brillando en mí.", "photos":[{"src":"/fotos/luana6.jpeg","alt":"Un paseo de mi infancia","position":"49% 50%"},{"src":"/fotos/luana5.jpeg","alt":"Sonriendo con mi sombrero rosa","position":"50% 35%"}]},
+    {"label":"Mi propia luz", "title":"Encontrando mi camino", "description":"Crecí, cambié y descubrí nuevas formas de ser yo. Cada recuerdo es una parte de lo que soy hoy.", "photos":[{"src":"/fotos/luana4.jpeg","alt":"Un retrato para recordar","position":"50% 35%"},{"src":"/fotos/luana3.jpeg","alt":"Un momento de mi presente","position":"50% 35%"},{"src":"/fotos/luana2.jpeg","alt":"Mi retrato en blanco y negro","position":"50% 30%"}]},
+    {"label":"Un nuevo capítulo", "title":"Hoy, mis quince", "description":"La misma ilusión de siempre, con mil sueños nuevos. Lo que viene quiero celebrarlo con vos.", "photos":[{"src":"/fotos/luana11.jpeg","alt":"Lista para un nuevo capítulo","position":"50% 35%"},{"src":"/fotos/luana1.jpeg","alt":"Mi historia continúa","position":"50% 35%"}]}
+  ]
+}

@@ -5,24 +5,11 @@ import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 export function initialize(config) {
   const removers=[];
   const listen=(el,event,fn)=>{el.addEventListener(event,fn);removers.push(()=>el.removeEventListener(event,fn));};
-  const date=new Date(config.date);
-  const valid=Number.isFinite(date.getTime());
-  const dateEl=document.querySelector('#event-date');
-  if(valid) dateEl.textContent=date.toLocaleString('es-AR',{dateStyle:'long',timeStyle:'short',timeZone:'America/Argentina/Buenos_Aires'})+' h';
-  if(config.demo){const note=document.createElement('p');note.className='demo-note';note.textContent='Fecha y lugar de ejemplo · A confirmar';dateEl.after(note);removers.push(()=>note.remove());}
-  function tick(){if(!valid)return;let left=Math.max(0,Math.floor((date-Date.now())/1000));for(const [id,div] of [['days',86400],['hours',3600],['minutes',60],['seconds',1]]){document.getElementById(id).textContent=String(Math.floor(left/div)).padStart(2,'0');left%=div;}}
-  tick();const interval=setInterval(tick,1000);
-  if(config.venue)document.querySelector('#venue').textContent=config.venue;
-  if(config.address)document.querySelector('#address').textContent=config.address+(config.demo?' · Ubicación de ejemplo':'');
-  if(config.address){const query=encodeURIComponent(config.address);for(const [id,url] of [['google',`https://www.google.com/maps/search/?api=1&query=${query}`],['waze',`https://waze.com/ul?q=${query}&navigate=yes`]]){const a=document.getElementById(id);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.removeAttribute('aria-disabled');}}
-  for(const id of ['rsvp-form','song-form']){const form=document.getElementById(id);listen(form,'submit',e=>{e.preventDefault();const status=form.querySelector('.form-status');const data=new FormData(form);const phone=String(config.whatsapp||'').replace(/\D/g,'');if(!phone){status.textContent='Pronto habilitaremos los envíos. Todavía no se envió tu respuesta.';return;}const text=id==='rsvp-form'?`¡Hola Luana! Soy ${data.get('name')}. ${data.get('attendance')} (${data.get('guests')}). ${data.get('notes')||''}`:`¡Luana! Quiero bailar ${data.get('song')} de ${data.get('artist')}.`;window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`,'_blank','noopener,noreferrer');status.textContent='Terminá el envío en WhatsApp para que Luana reciba tu mensaje.';});}
-  const dialog=document.getElementById('lightbox');listen(dialog.querySelector('button'),'click',()=>dialog.close());listen(dialog,'click',e=>{if(e.target===dialog)dialog.close();});
-  if(Array.isArray(config.photos)&&config.photos.length){const gallery=document.querySelector('#photos');gallery.replaceChildren();config.photos.forEach((photo,i)=>{const src=typeof photo==='string'?photo:photo.src;if(!src || !(/^(https?:\/\/|\/)/.test(src)))return;const button=document.createElement('button');button.className='photo p'+(i%3+1);button.setAttribute('aria-label',`Ver recuerdo ${i+1} de Luana`);const img=document.createElement('img');img.src=src;img.alt=photo.alt||`Recuerdo ${i+1} de Luana`;img.loading='lazy';button.append(img);listen(button,'click',()=>{dialog.querySelector('img').src=src;dialog.showModal();});gallery.append(button);});}
   gsap.registerPlugin(ScrollTrigger);
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const host=document.getElementById('scene');
   let renderer;
-  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});}catch{host.dataset.fallback='true';return()=>{clearInterval(interval);removers.forEach(fn=>fn());};}
+  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});}catch{host.dataset.fallback='true';return()=>{removers.forEach(fn=>fn());};}
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;host.append(renderer.domElement);
   const scene=new THREE.Scene();scene.fog=new THREE.FogExp2('#0b261f',.055);
   const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera.position.set(0,3.8,15);
@@ -58,11 +45,110 @@ export function initialize(config) {
   const dotCanvas=document.createElement('canvas');dotCanvas.width=32;dotCanvas.height=32;const ctx=dotCanvas.getContext('2d');const grad=ctx.createRadialGradient(16,16,0,16,16,16);grad.addColorStop(0,'#ffffdc');grad.addColorStop(.2,'#e9f6a5');grad.addColorStop(1,'#cbe37d00');ctx.fillStyle=grad;ctx.fillRect(0,0,32,32);const glow=new THREE.CanvasTexture(dotCanvas);
   const dots=new THREE.Points(dotsGeo,new THREE.PointsMaterial({size:.12,map:glow,color:'#e2ed9b',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));scene.add(dots);
   const trailCount=200,trailPositions=new Float32Array(trailCount*3);const trailGeo=new THREE.BufferGeometry();trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPositions,3));const trail=new THREE.Points(trailGeo,new THREE.PointsMaterial({map:glow,size:.1,color:'#eef0b1',transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));scene.add(trail);
-  const state={progress:0};let anim,visible=true;const mobile=()=>innerWidth<760;
-  const timeline=gsap.context(()=>{if(!reduced){gsap.to(state,{progress:1,ease:'none',scrollTrigger:{trigger:document.body,start:'top top',end:'bottom bottom',scrub:1.5}});gsap.utils.toArray('.reveal').forEach(el=>gsap.from(el,{y:32,opacity:0,duration:1,scrollTrigger:{trigger:el,start:'top 92%',once:true}}));}});
-  function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}listen(window,'resize',resize);listen(document,'visibilitychange',()=>{visible=!document.hidden;});
-  const clock=new THREE.Clock();function render(){anim=requestAnimationFrame(render);if(!visible)return;const t=reduced?0:clock.getElapsedTime(),p=state.progress;const phase=Math.min(1,p*3.4);princess.position.x=mobile()?Math.sin(p*8)*.5:Math.sin(phase*Math.PI)*3.1;princess.position.y=-1+Math.sin(t*1.2)*.055;princess.rotation.y=reduced?-.2:p*Math.PI*9+Math.sin(t*.45)*.12;princess.rotation.z=Math.sin(t*.8)*.025;arms.rotation.z=Math.sin(t)*.035;camera.position.set(Math.sin(p*5)*1.2,3.7+p*1.5,mobile()?18:15-p*1.5);camera.lookAt(princess.position.x*.3,mobile()?3.3:3.5,0);for(let i=0;i<count;i++){positions[i*3]=origins[i][0]+Math.sin(t*.25+i)*.25;positions[i*3+1]=origins[i][1]+Math.sin(t*.45+i)*.18;}dotsGeo.attributes.position.needsUpdate=true;for(let i=0;i<trailCount;i++){let f=i/trailCount,a=f*18-t*.65-princess.rotation.y,r=1.2+f*2;trailPositions[i*3]=princess.position.x+Math.sin(a)*r;trailPositions[i*3+1]=.2+f*2+Math.sin(t+i)*.04;trailPositions[i*3+2]=Math.cos(a)*r;}trailGeo.attributes.position.needsUpdate=true;host.style.opacity=String(p>.36?Math.max(.16,1-(p-.36)*3):1);renderer.render(scene,camera);}render();
-  return()=>{cancelAnimationFrame(anim);clearInterval(interval);timeline.revert();removers.forEach(fn=>fn());scene.traverse(obj=>{obj.geometry?.dispose();if(obj.material){(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());}});glow.dispose();renderer.dispose();renderer.domElement.remove();};
+  // Render the dancer separately so she can accompany the photos above the water.
+  const dancerScene = new THREE.Scene();
+  dancerScene.add(princess, trail);
+  dancerScene.add(new THREE.HemisphereLight(0xeaf1cd, 0x244d36, 2.4));
+  const dancerKey = key.clone(); dancerKey.intensity = 3.4; dancerScene.add(dancerKey);
+  const dancerRim = rim.clone(); dancerScene.add(dancerRim);
+  renderer.autoClear = false;
+  const state = { scroll: reduced ? window.scrollY : 0 };
+  const path = document.getElementById('timeline-path');
+  const steps = [...document.querySelectorAll('.memory-step')];
+  let pathTop = 0, pathEnd = 0, centers = [];
+  let anim, visible = !document.hidden;
+  const clamp = value => Math.min(1, Math.max(0, value));
+  function measure() {
+    pathTop = path.getBoundingClientRect().top + window.scrollY;
+    pathEnd = pathTop + path.offsetHeight;
+    centers = steps.map(step => step.getBoundingClientRect().top + window.scrollY + step.offsetHeight / 2);
+  }
+  measure();
+  const timeline = gsap.context(() => {
+    if (!reduced) {
+      gsap.to(state, {scroll: () => document.documentElement.scrollHeight - innerHeight, ease:'none', scrollTrigger:{trigger:document.documentElement,start:'top top',end:'bottom bottom',scrub:0.7,invalidateOnRefresh:true}});
+      gsap.utils.toArray('.reveal').forEach(el => gsap.from(el, {y:24,opacity:0,duration:0.8,scrollTrigger:{trigger:el,start:'top 94%',once:true}}));
+      gsap.to('.timeline-fill', {scaleY:1, ease:'none', scrollTrigger:{trigger:path,start:'top center',end:'bottom center',scrub:true}});
+    } else {
+      listen(window, 'scroll', () => {state.scroll = window.scrollY;});
+      gsap.set('.timeline-fill', {scaleY:1});
+    }
+  });
+  ScrollTrigger.addEventListener('refresh', measure);
+  removers.push(() => ScrollTrigger.removeEventListener('refresh', measure));
+  document.fonts.ready.then(() => { if(host.isConnected) ScrollTrigger.refresh(); });
+  function resize() { camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);measure(); }
+  listen(window,'resize',resize);
+  listen(document,'visibilitychange',()=>{visible=!document.hidden;});
+  const ray=new THREE.Vector3(),anchor=new THREE.Vector3();
+  const velocities=new Float32Array(trailCount*3),ages=new Float32Array(trailCount),colors=new Float32Array(trailCount*3);
+  trailGeo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  trail.material.vertexColors=true;trail.material.needsUpdate=true;
+  for(let i=0;i<trailCount;i++) ages[i]=random()*3;
+  function spawnParticle(i) {
+    const a=random()*Math.PI*2,r=(.8+random()*.9)*princess.scale.x;
+    trailPositions[i*3]=princess.position.x+Math.sin(a)*r;
+    trailPositions[i*3+1]=princess.position.y+(.4+random()*1.5)*princess.scale.y;
+    trailPositions[i*3+2]=Math.cos(a)*r;
+    velocities[i*3]=Math.sin(a)*(.12+random()*.25);
+    velocities[i*3+1]=.12+random()*.35;
+    velocities[i*3+2]=Math.cos(a)*.2;
+  }
+  let initializedParticles=false;
+  const clock=new THREE.Clock();let elapsed=0;
+  function render() {
+    anim=requestAnimationFrame(render);
+    const dt=Math.min(clock.getDelta(),.04);
+    if(!visible)return;
+    elapsed+=dt;
+    const t=reduced?0:elapsed,scroll=state.scroll,mobile=innerWidth<760;
+    const entry=clamp((scroll-(pathTop-innerHeight*.8))/(innerHeight*.8));
+    const exit=clamp((pathEnd-scroll)/(innerHeight*.7));
+    const mix=entry*exit;
+    const viewCenter=scroll+innerHeight*.5;
+    let chapter=0;
+    for(let i=0;i<centers.length-1;i++) {
+      if(viewCenter>=centers[i]) chapter=i+clamp((viewCenter-centers[i])/(centers[i+1]-centers[i]));
+    }
+    const xNorm=.5+Math.cos(chapter*Math.PI)*(mobile?.325:.265);
+    const yNorm=.55+Math.sin(chapter*Math.PI*2)*.10;
+    const cameraDrift = reduced ? 0 : Math.cos(chapter*Math.PI)*mix*.35;
+    camera.position.set(cameraDrift,3.8+mix*.15,mobile?18:15);
+    camera.lookAt(cameraDrift*.5,(mobile?3.3:3.5)+mix*.15,0);
+    camera.updateMatrixWorld();
+    ray.set(xNorm*2-1,1-yNorm*2,.5).unproject(camera).sub(camera.position).normalize();
+    anchor.copy(camera.position).addScaledVector(ray,-camera.position.z/ray.z);
+    const timelineScale=mobile?.30:.64;
+    const scale=THREE.MathUtils.lerp(.85,timelineScale,mix);
+    princess.scale.setScalar(scale);
+    const storyShift=Math.sin(clamp(scroll/Math.max(1,pathTop-innerHeight))*Math.PI)*(mobile?.3:3.0);
+    princess.position.x=THREE.MathUtils.lerp(storyShift,anchor.x,mix);
+    princess.position.y=THREE.MathUtils.lerp(-1,anchor.y-2.3*scale,mix)+Math.sin(t*1.2)*.045;
+    princess.rotation.y=reduced?-.2:chapter*Math.PI*2+scroll/innerHeight*.25+Math.sin(t*.5)*.14;
+    princess.rotation.z=Math.sin(t*.8+chapter)*.035;
+    arms.rotation.z=Math.sin(t+chapter)*.055;
+    for(let i=0;i<count;i++) {
+      positions[i*3]=origins[i][0]+Math.sin(t*.25+i)*.25;
+      positions[i*3+1]=origins[i][1]+Math.sin(t*.45+i)*.18;
+    }
+    dotsGeo.attributes.position.needsUpdate=true;
+    for(let i=0;i<trailCount;i++) {
+      ages[i]+=reduced?0:dt;
+      if(!initializedParticles || ages[i]>3){ages[i]=!initializedParticles?random()*3:0;spawnParticle(i);}
+      if(!reduced) for(let axis=0;axis<3;axis++) trailPositions[i*3+axis]+=velocities[i*3+axis]*dt;
+      const fade=Math.sin(ages[i]/3*Math.PI);
+      colors[i*3]=fade;colors[i*3+1]=fade;colors[i*3+2]=fade*.7;
+    }
+    initializedParticles=true;
+    trailGeo.attributes.position.needsUpdate=true;trailGeo.attributes.color.needsUpdate=true;
+    host.style.opacity=String(1-clamp((scroll-pathEnd)/(innerHeight*.7))*.82);
+    renderer.clear();renderer.render(scene,camera);renderer.clearDepth();renderer.render(dancerScene,camera);
+  }
+  render();
+  return()=>{
+    cancelAnimationFrame(anim);timeline.revert();removers.forEach(fn=>fn());
+    for(const root of [scene,dancerScene])root.traverse(obj=>{obj.geometry?.dispose();if(obj.material)(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());});
+    glow.dispose();renderer.dispose();renderer.domElement.remove();
+  };
 }
-
 
