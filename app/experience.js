@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
@@ -15,25 +17,26 @@ export function initialize(config) {
   const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera.position.set(0,3.8,15);
   scene.add(new THREE.HemisphereLight(0xd7e8b3,0x193d30,2));const key=new THREE.DirectionalLight(0xffebbb,3);key.position.set(-4,8,5);scene.add(key);const rim=new THREE.PointLight(0xc5e590,45,20);rim.position.set(2,5,-3);scene.add(rim);
   const material=(color,roughness=.6,metalness=.05)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
-  const skin=material('#ac754e'),leaf=material('#aabb73',.4),lightLeaf=material('#d3d99b',.45),darkLeaf=material('#759959'),hair=material('#231e16'),gold=material('#d9ca79',.3,.65),bark=material('#17382c');
+  const leaf=material('#aabb73',.4),lightLeaf=material('#d3d99b',.45),gold=material('#d9ca79',.3,.65),bark=material('#17382c');
   function mesh(geo,mat,parent,x=0,y=0,z=0){const obj=new THREE.Mesh(geo,mat);obj.position.set(x,y,z);parent.add(obj);return obj;}
   function sphere(parent,mat,x,y,z,sx,sy,sz){const m=mesh(new THREE.SphereGeometry(1,24,16),mat,parent,x,y,z);m.scale.set(sx,sy,sz);return m;}
   function limb(parent,mat,a,b,r1,r2){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),d=end.clone().sub(start);const obj=mesh(new THREE.CylinderGeometry(r2,r1,d.length(),12),mat,parent);obj.position.copy(start.add(end).multiplyScalar(.5));obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return obj;}
   const princess=new THREE.Group();scene.add(princess);princess.position.set(0,-1,0);princess.scale.setScalar(.85);
-  const skirt=mesh(new THREE.ConeGeometry(1.8,2.5,48,1,true),lightLeaf,princess,0,1.3,0);
-  // Layered, sculpted petals form a water-lily ball gown.
-  for(let i=0;i<10;i++){const a=i/10*Math.PI*2;const petal=sphere(princess,i%2?leaf:darkLeaf,Math.sin(a)*.82,1.45,Math.cos(a)*.82,.62,1.35,.24);petal.rotation.set(Math.cos(a)*.38,a,-Math.sin(a)*.38);}
-  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const p=sphere(princess,lightLeaf,Math.sin(a)*.48,2.05,Math.cos(a)*.48,.36,.82,.16);p.rotation.set(Math.cos(a)*.55,a,-Math.sin(a)*.55);}
-  mesh(new THREE.CylinderGeometry(.32,.5,.9,24),leaf,princess,0,2.9,0);
-  sphere(princess,skin,0,3.38,0,.4,.22,.23);mesh(new THREE.CylinderGeometry(.12,.15,.28,16),skin,princess,0,3.65,0);
-  sphere(princess,skin,0,4.02,0,.34,.45,.3);sphere(princess,hair,0,4.23,-.08,.35,.3,.29);sphere(princess,hair,0,4.55,-.12,.25,.24,.24);
-  sphere(princess,hair,-.19,4.22,.15,.18,.2,.17);
-  for(const x of [-.13,.13])sphere(princess,hair,x,4.05,.28,.025,.038,.015);
-  const smile=mesh(new THREE.TorusGeometry(.065,.012,8,16,Math.PI),material('#743e37'),princess,0,3.9,.29);smile.rotation.z=Math.PI;
-  for(const x of [-.35,.35])sphere(princess,gold,x,3.94,0,.035,.08,.035);
-  for(let i=0;i<5;i++){const a=(i-2)*.27;const jewel=mesh(new THREE.ConeGeometry(.06,.22+(.12-Math.abs(i-2)*.04),4),gold,princess,Math.sin(a)*.3,4.48,Math.cos(a)*.24);jewel.rotation.z=-a;}
-  const arms=new THREE.Group();princess.add(arms);limb(arms,skin,[-.36,3.35,0],[-.83,3.04,.06],.12,.09);limb(arms,lightLeaf,[-.83,3.04,.06],[-1.25,3.47,.2],.09,.075);sphere(arms,skin,-1.28,3.54,.2,.09,.15,.09);limb(arms,skin,[.36,3.35,0],[.87,3.5,.03],.12,.09);limb(arms,lightLeaf,[.87,3.5,.03],[1.14,4.02,.1],.09,.065);sphere(arms,skin,1.16,4.1,.1,.08,.14,.08);
-  const flower=new THREE.Group();princess.add(flower);flower.position.set(0,2.57,.47);for(let i=0;i<5;i++){let a=i*Math.PI*2/5;const p=sphere(flower,lightLeaf,Math.sin(a)*.12,Math.cos(a)*.12,0,.09,.15,.05);p.rotation.z=-a;}sphere(flower,gold,0,0,.05,.07,.07,.04);
+  const dancerPose=new THREE.Group();princess.add(dancerPose);
+  // The supplied game asset replaces the former geometric figure. Normalize it
+  // to the same five-unit stage height so all scroll choreography stays reusable.
+  const modelPath='/modelos/tiana/';
+  new MTLLoader().setPath(modelPath).load('Tiana RIP.mtl',materials=>{
+    materials.preload();
+    new OBJLoader().setMaterials(materials).setPath(modelPath).load('Tiana RIP.obj',object=>{
+      const box=new THREE.Box3().setFromObject(object),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+      object.position.set(-center.x,-box.min.y,-center.z);
+      object.scale.setScalar(5/size.y);
+      object.rotation.y=0;
+      object.traverse(child=>{if(child.isMesh){child.castShadow=false;child.receiveShadow=false;child.frustumCulled=false;}});
+      dancerPose.add(object);
+    },undefined,()=>{host.dataset.modelFallback='true';});
+  },undefined,()=>{host.dataset.modelFallback='true';});
   const water=mesh(new THREE.PlaneGeometry(100,100,30,30),new THREE.MeshStandardMaterial({color:'#102f26',roughness:.3,metalness:.6,transparent:true,opacity:.9}),scene,0,-1.1,0);water.rotation.x=-Math.PI/2;
   const platform=mesh(new THREE.CylinderGeometry(2.7,2.8,.09,64),material('#365d39',.5),scene,0,-1.03,0);
   for(let i=0;i<4;i++){const ring=mesh(new THREE.TorusGeometry(3+i*.7,.012,6,100),new THREE.MeshBasicMaterial({color:'#859e5d',transparent:true,opacity:.18-i*.025}),scene,0,-1.04,0);ring.rotation.x=Math.PI/2;}
@@ -126,7 +129,8 @@ export function initialize(config) {
     princess.position.y=THREE.MathUtils.lerp(-1,anchor.y-2.3*scale,mix)+Math.sin(t*1.2)*.045;
     princess.rotation.y=reduced?-.2:chapter*Math.PI*2+scroll/innerHeight*.25+Math.sin(t*.5)*.14;
     princess.rotation.z=Math.sin(t*.8+chapter)*.035;
-    arms.rotation.z=Math.sin(t+chapter)*.055;
+    dancerPose.rotation.x=Math.sin(t*1.25+chapter)*.018;
+    dancerPose.rotation.z=Math.sin(t+chapter)*.045;
     for(let i=0;i<count;i++) {
       positions[i*3]=origins[i][0]+Math.sin(t*.25+i)*.25;
       positions[i*3+1]=origins[i][1]+Math.sin(t*.45+i)*.18;
