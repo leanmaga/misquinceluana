@@ -23,12 +23,32 @@ export function initialize(config) {
   function limb(parent,mat,a,b,r1,r2){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),d=end.clone().sub(start);const obj=mesh(new THREE.CylinderGeometry(r2,r1,d.length(),12),mat,parent);obj.position.copy(start.add(end).multiplyScalar(.5));obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return obj;}
   const princess=new THREE.Group();scene.add(princess);princess.position.set(0,-1,0);princess.scale.setScalar(.85);
   const dancerPose=new THREE.Group();princess.add(dancerPose);
+  function poseDancingArms(object){
+    const shoulderY=14.86,shoulderX=1.42,angle=.62;
+    object.traverse(child=>{
+      if(!child.isMesh||!child.geometry?.attributes?.position)return;
+      const position=child.geometry.attributes.position;
+      for(let i=0;i<position.count;i++){
+        const x=position.getX(i),y=position.getY(i);
+        if(y<13.65||y>16.1||Math.abs(x)<1.25)continue;
+        const side=Math.sign(x),pivotX=side*shoulderX;
+        const dx=x-pivotX,dy=y-shoulderY;
+        const influence=THREE.MathUtils.smoothstep(Math.abs(x),1.25,2.15);
+        const a=angle*influence,c=Math.cos(a),s=Math.sin(a);
+        position.setXY(i,pivotX+dx*c-dy*s,shoulderY+dx*s+dy*c);
+      }
+      position.needsUpdate=true;
+      child.geometry.computeVertexNormals();
+      child.geometry.computeBoundingSphere();
+    });
+  }
   // The supplied game asset replaces the former geometric figure. Normalize it
   // to the same five-unit stage height so all scroll choreography stays reusable.
   const modelPath='/modelos/tiana/';
   new MTLLoader().setPath(modelPath).load('Tiana RIP.mtl',materials=>{
     materials.preload();
     new OBJLoader().setMaterials(materials).setPath(modelPath).load('Tiana RIP.obj',object=>{
+      poseDancingArms(object);
       const box=new THREE.Box3().setFromObject(object),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
       object.position.set(-center.x,-box.min.y,-center.z);
       object.scale.setScalar(5/size.y);
