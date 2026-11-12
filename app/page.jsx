@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { initialize } from './experience';
+import BookIntro from './book-intro';
 
 const safeSource = value => typeof value === 'string' && (/^\/(?!\/)/.test(value) || /^https:\/\//.test(value));
 
@@ -122,6 +123,7 @@ function Invitation({ config }) {
 }
 
 export default function Home() {
+  const [entered, setEntered] = useState(false);
   const [config, setConfig] = useState(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -136,6 +138,6 @@ export default function Home() {
     return () => controller.abort();
   }, []);
   if (!config) return <main className="loading-invitation"><span>✧</span><p>{failed ? 'No pudimos abrir la invitación. Revisá la configuración e intentá de nuevo.' : 'La magia está por comenzar…'}</p>{failed && <button onClick={() => window.location.reload()}>Volver a intentar</button>}<noscript>Activá JavaScript para abrir la invitación.</noscript></main>;
-  return <Invitation config={config} />;
+  return entered ? <Invitation config={config} /> : <BookIntro config={config} onEnter={() => setEntered(true)} />;
 }
 
