@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { gsap } from 'gsap';
@@ -71,6 +72,24 @@ export function initialize(config) {
   // Render the dancer separately so she can accompany the photos above the water.
   const dancerScene = new THREE.Scene();
   dancerScene.add(princess, trail);
+  const frog = new THREE.Group();
+  dancerScene.add(frog);
+  let frogReady=false, disposed=false;
+  const frogJoints=[];
+  new GLTFLoader().load('/modelos/naveen.glb', gltf=>{
+    if(disposed)return;
+    const model=gltf.scene;
+    const bounds=new THREE.Box3().setFromObject(model);
+    const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+    const unit=2.4/Math.max(size.x,size.y,size.z);
+    const normalized=new THREE.Group();
+    model.position.sub(new THREE.Vector3(center.x,bounds.min.y,center.z));
+    normalized.add(model);normalized.scale.setScalar(unit);frog.add(normalized);
+    model.traverse(node=>{
+      if(node.isBone && /e_(hip|knee|shoulder|elbow)_[lr]_/.test(node.name)) frogJoints.push({node,rest:node.quaternion.clone(),side:node.name.includes('_l_')?1:-1});
+    });
+    frogReady=true;
+  },undefined,error=>console.warn('No se pudo cargar Naveen',error));
   dancerScene.add(new THREE.HemisphereLight(0xeaf1cd, 0x244d36, 2.4));
   const dancerKey = key.clone(); dancerKey.intensity = 3.4; dancerScene.add(dancerKey);
   const dancerRim = rim.clone(); dancerScene.add(dancerRim);
@@ -78,13 +97,17 @@ export function initialize(config) {
   const state = { scroll: reduced ? window.scrollY : 0 };
   const path = document.getElementById('timeline-path');
   const steps = [...document.querySelectorAll('.memory-step')];
-  let pathTop = 0, pathEnd = 0, centers = [];
+  let pathTop = 0, pathEnd = 0, centers = [], landingPoints = [];
   let anim, visible = !document.hidden;
   const clamp = value => Math.min(1, Math.max(0, value));
   function measure() {
     pathTop = path.getBoundingClientRect().top + window.scrollY;
     pathEnd = pathTop + path.offsetHeight;
     centers = steps.map(step => step.getBoundingClientRect().top + window.scrollY + step.offsetHeight / 2);
+    landingPoints = steps.map(step => {
+      const rect = step.querySelector('.memory-card').getBoundingClientRect();
+      return { x:rect.left + rect.width / 2, y:rect.top + window.scrollY };
+    });
   }
   measure();
   const timeline = gsap.context(() => {
@@ -139,6 +162,33 @@ export function initialize(config) {
     camera.position.set(cameraDrift,3.8+mix*.15,mobile?18:15);
     camera.lookAt(cameraDrift*.5,(mobile?3.3:3.5)+mix*.15,0);
     camera.updateMatrixWorld();
+    // The feet are anchored to the crown of the actual rounded card border.
+    let frogChapter=0;
+    const landingView=scroll+innerHeight*.55;
+    for(let i=0;i<landingPoints.length-1;i++) {
+      if(landingView>=landingPoints[i].y) frogChapter=i+clamp((landingView-landingPoints[i].y)/(landingPoints[i+1].y-landingPoints[i].y));
+    }
+    const segment=Math.floor(frogChapter),phase=frogChapter-segment;
+    const flight=reduced?0:clamp((phase-.18)/.64);
+    const arc=4*flight*(1-flight);
+    const from=landingPoints[segment] || {x:innerWidth/2,y:scroll+innerHeight*.55};
+    const to=landingPoints[Math.min(segment+1,landingPoints.length-1)] || from;
+    const direction=Math.sign(to.x-from.x)||1;
+    const frogX=THREE.MathUtils.lerp(from.x,to.x,flight)/innerWidth;
+    const frogY=(THREE.MathUtils.lerp(from.y,to.y,flight)-window.scrollY-2)/innerHeight-arc*.22;
+    ray.set(frogX*2-1,1-frogY*2,.5).unproject(camera).sub(camera.position).normalize();
+    frog.position.copy(camera.position).addScaledVector(ray,-camera.position.z/ray.z);
+    const crouch=phase<.18?Math.sin(phase/.18*Math.PI)*.18:phase>.82?Math.sin((phase-.82)/.18*Math.PI)*.16:0;
+    const frogScale=mobile?.62:1;
+    frog.scale.set(frogScale*(1+crouch*.3),frogScale*(1-crouch),frogScale);
+    frog.rotation.set(0,direction*Math.PI/2,flight>0&&flight<1?-direction*(1-2*flight)*.25:0);
+    for(const joint of frogJoints){
+      joint.node.quaternion.copy(joint.rest);
+      joint.node.rotateX(joint.side*(arc*.28-crouch*.6));
+    }
+    frog.visible=frogReady&&mix>.5;
+    princess.visible=!frog.visible;
+    trail.visible=!frog.visible;
     ray.set(xNorm*2-1,1-yNorm*2,.5).unproject(camera).sub(camera.position).normalize();
     anchor.copy(camera.position).addScaledVector(ray,-camera.position.z/ray.z);
     const timelineScale=mobile?.30:.64;
@@ -170,6 +220,7 @@ export function initialize(config) {
   }
   render();
   return()=>{
+    disposed=true;
     cancelAnimationFrame(anim);timeline.revert();removers.forEach(fn=>fn());
     for(const root of [scene,dancerScene])root.traverse(obj=>{obj.geometry?.dispose();if(obj.material)(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());});
     glow.dispose();renderer.dispose();renderer.domElement.remove();
