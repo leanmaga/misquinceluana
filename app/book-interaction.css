@@ -1,0 +1,15 @@
+.enchanted-book[role=button]{cursor:pointer;touch-action:manipulation}
+.enchanted-book[role=button]:focus-visible{outline:2px solid #f5e6af;outline-offset:12px;border-radius:8px}
+.enchanted-book[aria-disabled=true]{cursor:default}
+.book-border{justify-content:center;gap:38px}
+.wand-sparks{position:absolute;inset:0;pointer-events:none}
+.wand-spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff4ba;box-shadow:0 0 6px #ffe8a0,0 0 14px #e5c66a;opacity:0;pointer-events:none}
+.wand-spark:nth-child(3n){width:3px;height:3px;background:#fff}
+.magic-wand{width:64px;height:192px;transform:translate(-32px,-24px) rotate(-38deg);transform-origin:32px 24px;filter:none;z-index:3}
+.crystal-staff{display:block;width:100%;height:100%;filter:drop-shadow(0 0 3px #d3d9b477)}
+.magic-wand:before{content:'';position:absolute;left:6px;top:-10px;width:52px;height:70px;background:radial-gradient(ellipse,#fffde6b0,#96eaff55 35%,#e7c66c22 55%,transparent 72%);filter:blur(5px);mix-blend-mode:screen}
+.wand-sparks{z-index:4;overflow:visible}
+.wand-spark{width:2px;height:2px;box-shadow:0 0 4px #fff1c0,0 0 9px #edbf69}
+.wand-spark:nth-child(3n){background:#c9f6ff;box-shadow:0 0 5px #a3ebff,0 0 12px #6dd3ff}
+.wand-spark:nth-child(7n){width:10px;height:10px;border-radius:0;background:#fff8d6;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
+@media(prefers-reduced-motion:reduce){.wand-sparks{display:none}}

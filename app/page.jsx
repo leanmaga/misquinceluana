@@ -138,6 +138,6 @@ export default function Home() {
     return () => controller.abort();
   }, []);
   if (!config) return <main className="loading-invitation"><span>✧</span><p>{failed ? 'No pudimos abrir la invitación. Revisá la configuración e intentá de nuevo.' : 'La magia está por comenzar…'}</p>{failed && <button onClick={() => window.location.reload()}>Volver a intentar</button>}<noscript>Activá JavaScript para abrir la invitación.</noscript></main>;
-  return entered ? <Invitation config={config} /> : <BookIntro config={config} onEnter={() => setEntered(true)} />;
+  return <><div id="invitation-stage" inert={!entered} style={entered ? undefined : {position:'fixed',inset:0,visibility:'hidden',overflow:'hidden'}}><Invitation config={config} /></div>{!entered && <BookIntro config={config} onEnter={() => setEntered(true)} />}</>;
 }
 
