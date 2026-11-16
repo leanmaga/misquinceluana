@@ -124,6 +124,11 @@ function Invitation({ config }) {
 
 export default function Home() {
   const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (!entered) return;
+    const frame=requestAnimationFrame(()=>window.dispatchEvent(new Event('invitation:opened')));
+    return ()=>cancelAnimationFrame(frame);
+  }, [entered]);
   const [config, setConfig] = useState(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {

@@ -72,6 +72,15 @@ export function initialize(config) {
   // Render the dancer separately so she can accompany the photos above the water.
   const dancerScene = new THREE.Scene();
   dancerScene.add(princess, trail);
+  // A transparent foreground canvas keeps the frog above photo-card surfaces.
+  const dancerRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  dancerRenderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
+  dancerRenderer.setSize(innerWidth,innerHeight);
+  dancerRenderer.outputColorSpace=renderer.outputColorSpace;
+  dancerRenderer.toneMapping=renderer.toneMapping;
+  dancerRenderer.toneMappingExposure=renderer.toneMappingExposure;
+  Object.assign(dancerRenderer.domElement.style,{position:'fixed',inset:'0',pointerEvents:'none',zIndex:'5'});
+  document.getElementById('invitation-stage').append(dancerRenderer.domElement);
   const frog = new THREE.Group();
   dancerScene.add(frog);
   let frogReady=false, disposed=false;
@@ -85,8 +94,24 @@ export function initialize(config) {
     const normalized=new THREE.Group();
     model.position.sub(new THREE.Vector3(center.x,bounds.min.y,center.z));
     normalized.add(model);normalized.scale.setScalar(unit);frog.add(normalized);
+    model.updateWorldMatrix(true,true);
+    const bones={};
+    model.traverse(node=>{if(node.isBone)bones[node.name]=node;});
+    const leftHip=Object.values(bones).find(node=>/^e_hip_l_/.test(node.name));
+    const rightHip=Object.values(bones).find(node=>/^e_hip_r_/.test(node.name));
+    // Anatomical left/right defines the shared hinge direction in world space.
+    // Convert it to each bone's own rest coordinates, including mirrored bones.
+    const lateral=leftHip&&rightHip
+      ? leftHip.getWorldPosition(new THREE.Vector3()).sub(rightHip.getWorldPosition(new THREE.Vector3())).normalize()
+      : new THREE.Vector3(1,0,0);
     model.traverse(node=>{
-      if(node.isBone && /e_(hip|knee|shoulder|elbow)_[lr]_/.test(node.name)) frogJoints.push({node,rest:node.quaternion.clone(),side:node.name.includes('_l_')?1:-1});
+      const match=node.name.match(/^e_(hip|knee|ankle|toes|shoulder|elbow|wrist|thumbfinger2|middlefinger2|spine1|chest|head)_([lrm])_/);
+      if(node.isBone && match){
+        const inverseRest=node.getWorldQuaternion(new THREE.Quaternion()).invert();
+        frogJoints.push({node,rest:node.quaternion.clone(),kind:match[1],side:match[2]==='l'?1:-1,
+          flexAxis:lateral.clone().applyQuaternion(inverseRest).normalize(),
+          spreadAxis:new THREE.Vector3(0,1,0).applyQuaternion(inverseRest).normalize()});
+      }
     });
     frogReady=true;
   },undefined,error=>console.warn('No se pudo cargar Naveen',error));
@@ -123,8 +148,13 @@ export function initialize(config) {
   ScrollTrigger.addEventListener('refresh', measure);
   removers.push(() => ScrollTrigger.removeEventListener('refresh', measure));
   document.fonts.ready.then(() => { if(host.isConnected) ScrollTrigger.refresh(); });
-  function resize() { camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);measure(); }
+  function resize() { camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);dancerRenderer.setSize(innerWidth,innerHeight);measure(); }
   listen(window,'resize',resize);
+  listen(window,'invitation:opened',()=>{
+    resize();
+    ScrollTrigger.refresh();
+    state.scroll=window.scrollY;
+  });
   listen(document,'visibilitychange',()=>{visible=!document.hidden;});
   const ray=new THREE.Vector3(),anchor=new THREE.Vector3();
   const velocities=new Float32Array(trailCount*3),ages=new Float32Array(trailCount),colors=new Float32Array(trailCount*3);
@@ -141,6 +171,30 @@ export function initialize(config) {
     velocities[i*3+2]=Math.cos(a)*.2;
   }
   let initializedParticles=false;
+  let landedIndex=0,jumpFrom=0,jumpTo=0,jumpTime=0,jumping=false;
+  const jumpDuration=1.45;
+  // Local Z is the flexion axis of the imported knee/elbow joints (X runs
+  // along each limb). Each row is a separate articulated jump pose.
+  const poseTimes=[0,.12,.18,.28,.52,.72,.82,.9,1];
+  const poses={
+    hip:[0,-.3,-.42,.55,.3,-.45,-.35,-.32,0],
+    knee:[0,.42,.58,-1.05,-.3,.9,.65,.48,0],
+    ankle:[0,-.2,-.32,.6,.15,-.5,-.35,-.3,0],
+    toes:[0,.12,.2,-.28,-.15,.25,.2,.18,0],
+    shoulder:[0,.18,.25,-.2,-.5,-.85,-.65,.2,0],
+    elbow:[0,.28,.38,-.16,-.45,-.65,-.5,.42,0],
+    wrist:[0,-.12,-.2,.15,-.1,-.4,-.25,.14,0],
+    thumbfinger2:[0,0,.05,.1,.2,.35,.3,.12,0],
+    middlefinger2:[0,0,.03,.08,.12,.22,.18,.08,0],
+    spine1:[0,-.06,-.1,.12,.08,-.06,-.08,-.1,0],
+    chest:[0,-.04,-.06,.08,.05,-.04,-.05,-.07,0],
+    head:[0,.06,.08,-.08,-.04,.12,.1,.08,0]
+  };
+  function samplePose(kind,progress){
+    let i=0;while(i<poseTimes.length-2&&progress>poseTimes[i+1])i++;
+    const u=THREE.MathUtils.smoothstep(progress,poseTimes[i],poseTimes[i+1]);
+    return THREE.MathUtils.lerp(poses[kind][i],poses[kind][i+1],u);
+  }
   const clock=new THREE.Clock();let elapsed=0;
   function render() {
     anim=requestAnimationFrame(render);
@@ -164,15 +218,24 @@ export function initialize(config) {
     camera.updateMatrixWorld();
     // The feet are anchored to the crown of the actual rounded card border.
     let frogChapter=0;
-    const landingView=scroll+innerHeight*.55;
+    const landingView=window.scrollY+innerHeight*.55;
     for(let i=0;i<landingPoints.length-1;i++) {
       if(landingView>=landingPoints[i].y) frogChapter=i+clamp((landingView-landingPoints[i].y)/(landingPoints[i+1].y-landingPoints[i].y));
     }
-    const segment=Math.floor(frogChapter),phase=frogChapter-segment;
+    const requestedIndex=Math.min(landingPoints.length-1,Math.max(0,Math.round(frogChapter)));
+    if(!jumping && requestedIndex!==landedIndex){
+      jumpFrom=landedIndex;jumpTo=landedIndex+Math.sign(requestedIndex-landedIndex);
+      jumpTime=0;jumping=true;
+    }
+    if(jumping){
+      jumpTime+=dt;
+      if(reduced||jumpTime>=jumpDuration){landedIndex=jumpTo;jumping=false;jumpTime=0;}
+    }
+    const segment=jumping?jumpFrom:landedIndex,phase=jumping?clamp(jumpTime/jumpDuration):0;
     const flight=reduced?0:clamp((phase-.18)/.64);
     const arc=4*flight*(1-flight);
     const from=landingPoints[segment] || {x:innerWidth/2,y:scroll+innerHeight*.55};
-    const to=landingPoints[Math.min(segment+1,landingPoints.length-1)] || from;
+    const to=landingPoints[jumping?jumpTo:landedIndex] || from;
     const direction=Math.sign(to.x-from.x)||1;
     const frogX=THREE.MathUtils.lerp(from.x,to.x,flight)/innerWidth;
     const frogY=(THREE.MathUtils.lerp(from.y,to.y,flight)-window.scrollY-2)/innerHeight-arc*.22;
@@ -180,13 +243,23 @@ export function initialize(config) {
     frog.position.copy(camera.position).addScaledVector(ray,-camera.position.z/ray.z);
     const crouch=phase<.18?Math.sin(phase/.18*Math.PI)*.18:phase>.82?Math.sin((phase-.82)/.18*Math.PI)*.16:0;
     const frogScale=mobile?.62:1;
-    frog.scale.set(frogScale*(1+crouch*.3),frogScale*(1-crouch),frogScale);
-    frog.rotation.set(0,direction*Math.PI/2,flight>0&&flight<1?-direction*(1-2*flight)*.25:0);
+    frog.scale.setScalar(frogScale);
+    frog.position.y-=reduced?0:crouch*frogScale*.35;
+    const pitch=reduced?0:samplePose('chest',phase) + (flight>0&&flight<1?(1-2*flight)*.22:0);
+    frog.rotation.set(0,direction*Math.PI/2,0);
+    // Local pitch follows the facing direction; descent reaches toward support.
+    frog.rotateX(pitch);
     for(const joint of frogJoints){
       joint.node.quaternion.copy(joint.rest);
-      joint.node.rotateX(joint.side*(arc*.28-crouch*.6));
+      // Small left/right timing differences make each leg settle separately.
+      const jointPhase=reduced?0:clamp(phase+(joint.side===1 && phase>.72 && phase<.98?.012:0));
+      const angle=samplePose(joint.kind,jointPhase);
+      joint.node.rotateOnAxis(joint.flexAxis,angle);
+      if(joint.kind==='thumbfinger2') joint.node.rotateOnAxis(joint.spreadAxis,joint.side*angle*.65);
+      if(joint.kind==='hip'||joint.kind==='shoulder') joint.node.rotateOnAxis(joint.spreadAxis,joint.side*arc*.1);
     }
-    frog.visible=frogReady&&mix>.5;
+    const inPhotoTimeline=window.scrollY+innerHeight*.8>=pathTop && window.scrollY<pathEnd;
+    frog.visible=frogReady&&inPhotoTimeline;
     princess.visible=!frog.visible;
     trail.visible=!frog.visible;
     ray.set(xNorm*2-1,1-yNorm*2,.5).unproject(camera).sub(camera.position).normalize();
@@ -216,7 +289,10 @@ export function initialize(config) {
     initializedParticles=true;
     trailGeo.attributes.position.needsUpdate=true;trailGeo.attributes.color.needsUpdate=true;
     host.style.opacity=String(1-clamp((scroll-pathEnd)/(innerHeight*.7))*.82);
-    renderer.clear();renderer.render(scene,camera);renderer.clearDepth();renderer.render(dancerScene,camera);
+    renderer.clear();renderer.render(scene,camera);
+    // Only the frog needs the foreground layer; retain the princess behind text.
+    if(frog.visible){dancerRenderer.render(dancerScene,camera);}
+    else {dancerRenderer.clear();renderer.clearDepth();renderer.render(dancerScene,camera);}
   }
   render();
   return()=>{
@@ -224,6 +300,7 @@ export function initialize(config) {
     cancelAnimationFrame(anim);timeline.revert();removers.forEach(fn=>fn());
     for(const root of [scene,dancerScene])root.traverse(obj=>{obj.geometry?.dispose();if(obj.material)(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());});
     glow.dispose();renderer.dispose();renderer.domElement.remove();
+    dancerRenderer.dispose();dancerRenderer.domElement.remove();
   };
 }
 
