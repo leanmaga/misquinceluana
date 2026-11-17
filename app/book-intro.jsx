@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import './book-intro.css';
 import './book-interaction.css';
+import IntroFrog from './intro-frog';
 
 export default function BookIntro({ config, onEnter }) {
   const root = useRef(null);
@@ -70,6 +71,7 @@ export default function BookIntro({ config, onEnter }) {
     };
   }, [opening, onEnter]);
   return <main ref={root} className="book-intro">
+    {!opening && <IntroFrog />}
     <div className="opening-sparks" aria-hidden="true">{Array.from({length:100},(_,index)=><span className="opening-spark" key={index}/>)}</div>
     <p className="eyebrow">CADA SUEÑO TIENE SU HISTORIA</p>
     <div className="book-perspective"><div className="enchanted-book" role="button" tabIndex={opening ? -1 : 0} aria-label="Abrir la invitación" aria-disabled={opening} onClick={() => { if (!opening) setOpening(true); }} onKeyDown={event => { if (!opening && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setOpening(true); } }}>
