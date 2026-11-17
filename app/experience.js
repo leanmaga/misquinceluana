@@ -74,6 +74,7 @@ export function initialize(config) {
   dancerScene.add(princess, trail);
   // A transparent foreground canvas keeps the frog above photo-card surfaces.
   const dancerRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  dancerRenderer.setClearColor(0x000000,0);
   dancerRenderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
   dancerRenderer.setSize(innerWidth,innerHeight);
   dancerRenderer.outputColorSpace=renderer.outputColorSpace;
@@ -88,6 +89,13 @@ export function initialize(config) {
   new GLTFLoader().load('/modelos/naveen.glb', gltf=>{
     if(disposed)return;
     const model=gltf.scene;
+    const smileTexture=new THREE.TextureLoader().load('/modelos/naveen-smile.png');
+    smileTexture.flipY=false;
+    smileTexture.colorSpace=THREE.SRGBColorSpace;
+    model.traverse(node=>{if(node.isMesh){
+      const materials=Array.isArray(node.material)?node.material:[node.material];
+      materials.forEach(mat=>{mat.map=smileTexture;mat.needsUpdate=true;});
+    }});
     const bounds=new THREE.Box3().setFromObject(model);
     const size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
     const unit=2.4/Math.max(size.x,size.y,size.z);
@@ -105,7 +113,7 @@ export function initialize(config) {
       ? leftHip.getWorldPosition(new THREE.Vector3()).sub(rightHip.getWorldPosition(new THREE.Vector3())).normalize()
       : new THREE.Vector3(1,0,0);
     model.traverse(node=>{
-      const match=node.name.match(/^e_(hip|knee|ankle|toes|shoulder|elbow|wrist|thumbfinger2|middlefinger2|spine1|chest|head)_([lrm])_/);
+      const match=node.name.match(/^e_(hip|knee|ankle|toes|shoulder|elbow|wrist|thumbfinger2|middlefinger2|spine1|chest|head|jaw)_([lrm])_/);
       if(node.isBone && match){
         const inverseRest=node.getWorldQuaternion(new THREE.Quaternion()).invert();
         frogJoints.push({node,rest:node.quaternion.clone(),kind:match[1],side:match[2]==='l'?1:-1,
@@ -172,6 +180,7 @@ export function initialize(config) {
   }
   let initializedParticles=false;
   let landedIndex=0,jumpFrom=0,jumpTo=0,jumpTime=0,jumping=false;
+  let frogYaw=0;
   const jumpDuration=1.45;
   // Local Z is the flexion axis of the imported knee/elbow joints (X runs
   // along each limb). Each row is a separate articulated jump pose.
@@ -188,7 +197,8 @@ export function initialize(config) {
     middlefinger2:[0,0,.03,.08,.12,.22,.18,.08,0],
     spine1:[0,-.06,-.1,.12,.08,-.06,-.08,-.1,0],
     chest:[0,-.04,-.06,.08,.05,-.04,-.05,-.07,0],
-    head:[0,.06,.08,-.08,-.04,.12,.1,.08,0]
+    head:[-.06,.06,.08,-.08,-.04,.12,.1,.08,-.06],
+    jaw:[0,0,0,0,0,0,0,0,0]
   };
   function samplePose(kind,progress){
     let i=0;while(i<poseTimes.length-2&&progress>poseTimes[i+1])i++;
@@ -246,7 +256,10 @@ export function initialize(config) {
     frog.scale.setScalar(frogScale);
     frog.position.y-=reduced?0:crouch*frogScale*.35;
     const pitch=reduced?0:samplePose('chest',phase) + (flight>0&&flight<1?(1-2*flight)*.22:0);
-    frog.rotation.set(0,direction*Math.PI/2,0);
+    const landingTurn=THREE.MathUtils.smoothstep(phase,.82,1);
+    const targetYaw=jumping?direction*Math.PI/2*(1-landingTurn):0;
+    frogYaw=reduced?targetYaw:THREE.MathUtils.damp(frogYaw,targetYaw,9,dt);
+    frog.rotation.set(0,frogYaw,0);
     // Local pitch follows the facing direction; descent reaches toward support.
     frog.rotateX(pitch);
     for(const joint of frogJoints){

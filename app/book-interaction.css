@@ -1,4 +1,14 @@
 .enchanted-book[role=button]{cursor:pointer;touch-action:manipulation}
+/* Keep the negative-z swamp canvas inside the invitation's stacking context,
+   including after the book's transform is removed. */
+#invitation-stage{position:relative;isolation:isolate;min-height:100svh;background:#061b16}
+#invitation-stage #scene{z-index:-1}
+.book-name{font-family:'Brush Script MT','Segoe Script','URW Chancery L',cursive!important;font-style:italic!important;font-weight:400!important;letter-spacing:-3px!important;padding:0 8px}
+.opening-sparks{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.opening-spark{position:absolute;left:0;top:0;width:4px;height:4px;background:#fff6ca;border-radius:50%;opacity:0;box-shadow:0 0 7px #fff4bd,0 0 16px #e6c56c}
+.opening-spark:nth-child(3n){width:8px;height:8px;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
+.opening-spark:nth-child(5n){background:#d4faff;box-shadow:0 0 9px #a0eaff}
+@media(prefers-reduced-motion:reduce){.opening-sparks{display:none}}
 .enchanted-book[role=button]:focus-visible{outline:2px solid #f5e6af;outline-offset:12px;border-radius:8px}
 .enchanted-book[aria-disabled=true]{cursor:default}
 .book-border{justify-content:center;gap:38px}

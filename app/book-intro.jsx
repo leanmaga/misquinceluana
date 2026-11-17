@@ -45,14 +45,23 @@ export default function BookIntro({ config, onEnter }) {
       gsap.set(root.current, {background:'transparent',position:'fixed',inset:0,zIndex:32});
       gsap.set(page, {opacity:1,background:'transparent',boxShadow:'inset 0 0 28px #e8d9a866, 0 0 30px #dcca8544',borderColor:'#cabc83'});
       gsap.set(book, {transformOrigin:'0 0',filter:'none'});
+      root.current.querySelectorAll('.opening-spark').forEach((spark,index)=>{
+        const angle=index*2.39996,radius=.2+(index%19)/19*.8;
+        gsap.fromTo(spark,{x:innerWidth*.5,y:innerHeight*.48,opacity:0,scale:.2},{
+          x:innerWidth*(.5+Math.cos(angle)*radius*.65),
+          y:innerHeight*(.48+Math.sin(angle)*radius*.65),
+          opacity:1,scale:1,duration:1.1,delay:.1+(index%7)*.035,ease:'power2.out',
+        });
+        gsap.to(spark,{opacity:0,scale:.1,duration:.65,delay:1.35+(index%7)*.035});
+      });
       gsap.timeline({onComplete:onEnter})
-        .to('.book-cover',{rotationY:-170,duration:2.4,ease:'sine.inOut'})
-        .to('.book-hint, .book-intro > .eyebrow',{opacity:0,duration:1.2},.4)
+        .to('.book-cover',{rotationY:-170,duration:.9,ease:'sine.inOut'})
+        .to('.book-hint, .book-intro > .eyebrow',{opacity:0,duration:.3},0)
         // Keep the physical page and its invitation aligned throughout the zoom.
-        .to(stage,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:0,duration:4.8,ease:'sine.inOut'},2)
-        .to(book,{x:-rect.left,y:-rect.top,scaleX:1/sx,scaleY:1/sy,duration:4.8,ease:'sine.inOut'},2)
-        .to(page,{borderColor:'transparent',boxShadow:'inset 0 0 0px #e8d9a800, 0 0 0px #dcca8500',duration:1.2},6.4)
-        .to(root.current,{opacity:0,duration:1.2},6.4);
+        .to(stage,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:0,duration:1.5,ease:'power2.inOut'},.55)
+        .to(book,{x:-rect.left,y:-rect.top,scaleX:1/sx,scaleY:1/sy,duration:1.5,ease:'power2.inOut'},.55)
+        .to(page,{borderColor:'transparent',boxShadow:'inset 0 0 0px #e8d9a800, 0 0 0px #dcca8500',duration:.35},1.9)
+        .to(root.current,{opacity:0,duration:.35},1.9);
     }, root);
     return () => {
       context.revert();
@@ -61,6 +70,7 @@ export default function BookIntro({ config, onEnter }) {
     };
   }, [opening, onEnter]);
   return <main ref={root} className="book-intro">
+    <div className="opening-sparks" aria-hidden="true">{Array.from({length:100},(_,index)=><span className="opening-spark" key={index}/>)}</div>
     <p className="eyebrow">CADA SUEÑO TIENE SU HISTORIA</p>
     <div className="book-perspective"><div className="enchanted-book" role="button" tabIndex={opening ? -1 : 0} aria-label="Abrir la invitación" aria-disabled={opening} onClick={() => { if (!opening) setOpening(true); }} onKeyDown={event => { if (!opening && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setOpening(true); } }}>
       <div className="book-paper" aria-hidden="true" />
