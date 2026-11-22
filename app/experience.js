@@ -11,8 +11,9 @@ export function initialize(config) {
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const host=document.getElementById('scene');
   let renderer;
+  let sceneActive=false, needsFrame=true;
   try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});}catch{host.dataset.fallback='true';return()=>{removers.forEach(fn=>fn());};}
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;host.append(renderer.domElement);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<760?1.25:1.5));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;host.append(renderer.domElement);
   const scene=new THREE.Scene();scene.fog=new THREE.FogExp2('#0b261f',.055);
   const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera.position.set(0,3.8,15);
   scene.add(new THREE.HemisphereLight(0xd7e8b3,0x193d30,2));const key=new THREE.DirectionalLight(0xffebbb,3);key.position.set(-4,8,5);scene.add(key);const rim=new THREE.PointLight(0xc5e590,45,20);rim.position.set(2,5,-3);scene.add(rim);
@@ -55,6 +56,7 @@ export function initialize(config) {
       object.rotation.y=0;
       object.traverse(child=>{if(child.isMesh){child.castShadow=false;child.receiveShadow=false;child.frustumCulled=false;}});
       dancerPose.add(object);
+      needsFrame=true;
     },undefined,()=>{host.dataset.modelFallback='true';});
   },undefined,()=>{host.dataset.modelFallback='true';});
   const water=mesh(new THREE.PlaneGeometry(100,100,30,30),new THREE.MeshStandardMaterial({color:'#102f26',roughness:.3,metalness:.6,transparent:true,opacity:.9}),scene,0,-1.1,0);water.rotation.x=-Math.PI/2;
@@ -101,9 +103,10 @@ export function initialize(config) {
   ScrollTrigger.addEventListener('refresh', measure);
   removers.push(() => ScrollTrigger.removeEventListener('refresh', measure));
   document.fonts.ready.then(() => { if(host.isConnected) ScrollTrigger.refresh(); });
-  function resize() { camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);measure(); }
+  function resize() { camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);needsFrame=true;measure(); }
   listen(window,'resize',resize);
   listen(window,'invitation:opened',()=>{
+    sceneActive=true;
     resize();
     ScrollTrigger.refresh();
     state.scroll=window.scrollY;
@@ -128,7 +131,8 @@ export function initialize(config) {
   function render() {
     anim=requestAnimationFrame(render);
     const dt=Math.min(clock.getDelta(),.04);
-    if(!visible)return;
+    if(!visible || (!sceneActive && !needsFrame))return;
+    needsFrame=false;
     elapsed+=dt;
     const t=reduced?0:elapsed,scroll=state.scroll,mobile=innerWidth<760;
     const entry=clamp((scroll-(pathTop-innerHeight*.8))/(innerHeight*.8));
@@ -147,8 +151,8 @@ export function initialize(config) {
     camera.updateMatrixWorld();
     ray.set(xNorm*2-1,1-yNorm*2,.5).unproject(camera).sub(camera.position).normalize();
     anchor.copy(camera.position).addScaledVector(ray,-camera.position.z/ray.z);
-    const timelineScale=mobile?.30:.64;
-    const scale=THREE.MathUtils.lerp(.85,timelineScale,mix);
+    // Keep the opening size throughout the photo timeline.
+    const scale=.85;
     princess.scale.setScalar(scale);
     const storyShift=Math.sin(clamp(scroll/Math.max(1,pathTop-innerHeight))*Math.PI)*(mobile?.3:3.0);
     princess.position.x=THREE.MathUtils.lerp(storyShift,anchor.x,mix);

@@ -8,13 +8,13 @@ export default function IntroFrog(){
   useEffect(()=>{
     let renderer;
     try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});}catch{return;}
-    renderer.setClearColor(0,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+    renderer.setClearColor(0,0);renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));
     host.current.append(renderer.domElement);
     const scene=new THREE.Scene(),camera=new THREE.OrthographicCamera(-5,5,2.5,0,.1,100);
     camera.position.set(0,0,12);camera.lookAt(0,0,0);
     scene.add(new THREE.HemisphereLight(0xffffff,0x587251,2));
     const frog=new THREE.Group();scene.add(frog);
-    let disposed=false,frame,elapsed=0;
+    let disposed=false,frame,elapsed=0,ready=false;
     const frogJoints=[];
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     const disposeModel=model=>model.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.map?.dispose();m.dispose();});});
@@ -23,6 +23,7 @@ export default function IntroFrog(){
       const model=gltf.scene,box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
       model.position.sub(new THREE.Vector3(center.x,box.min.y,center.z));
       const normalized=new THREE.Group();normalized.add(model);normalized.scale.setScalar(1.25/Math.max(size.x,size.y,size.z));frog.add(normalized);
+    ready=true;
     model.updateWorldMatrix(true,true);
     const bones={};
     model.traverse(node=>{if(node.isBone)bones[node.name]=node;});
@@ -44,7 +45,7 @@ export default function IntroFrog(){
     });
 
     });
-    function resize(){renderer.setSize(innerWidth,150);const width=innerWidth/150*2.5;camera.left=-width/2;camera.right=width/2;camera.updateProjectionMatrix();}
+    function resize(){renderer.setSize(150,150);camera.left=-1.25;camera.right=1.25;camera.updateProjectionMatrix();}
     resize();window.addEventListener('resize',resize);
   const poseTimes=[0,.12,.18,.28,.52,.72,.82,.9,1];
   const poses={
@@ -70,13 +71,16 @@ export default function IntroFrog(){
 
     const clock=new THREE.Clock();
     function render(){
-      frame=requestAnimationFrame(render);elapsed+=Math.min(clock.getDelta(),.05);
+      frame=requestAnimationFrame(render);
+      const dt=clock.getDelta();
+      if(document.hidden || !ready)return;
+      elapsed+=Math.min(dt,.1);
       const hop=elapsed/1.1,step=Math.floor(hop),steps=7;
       const cycle=Math.floor(step/steps)%2,direction=cycle===0?1:-1;
       const phase=(elapsed%1.1)/1.1,flight=reduced?0:THREE.MathUtils.clamp((phase-.15)/.7,0,1);
       const progress=reduced?0:(cycle===0?(step%steps+flight)/steps:1-(step%steps+flight)/steps);
-      const range=Math.max(.2,camera.right-.8);
-      frog.position.set(THREE.MathUtils.lerp(-range,range,progress),.08+4*flight*(1-flight)*.65,0);
+      host.current.style.transform=`translate3d(${Math.max(0,innerWidth-150)*progress}px,0,0)`;
+      frog.position.set(0,.08+4*flight*(1-flight)*.65,0);
       frog.rotation.set(0,reduced?0:direction*Math.PI/2,0);
       const squash=reduced?0:Math.sin(phase*Math.PI*2)*.06;frog.scale.set(1,1-squash,1);
       for(const joint of frogJoints){
@@ -87,5 +91,5 @@ export default function IntroFrog(){
     }
     render();return()=>{disposed=true;cancelAnimationFrame(frame);window.removeEventListener('resize',resize);disposeModel(scene);renderer.dispose();renderer.domElement.remove();};
   },[]);
-  return <div ref={host} aria-hidden="true" style={{position:'fixed',bottom:0,left:0,width:'100%',height:150,pointerEvents:'none',zIndex:2}}/>;
+  return <div ref={host} aria-hidden="true" style={{position:'fixed',bottom:0,left:0,width:150,height:150,willChange:'transform',pointerEvents:'none',zIndex:2}}/>;
 }

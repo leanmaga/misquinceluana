@@ -23,3 +23,13 @@
 .wand-spark:nth-child(3n){background:#c9f6ff;box-shadow:0 0 5px #a3ebff,0 0 12px #6dd3ff}
 .wand-spark:nth-child(7n){width:10px;height:10px;border-radius:0;background:#fff8d6;clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%)}
 @media(prefers-reduced-motion:reduce){.wand-sparks{display:none}}
+
+/* Bound compositing to the moving elements, not the entire book subtree. */
+.enchanted-book{filter:none;box-shadow:12px 20px 28px #0005}
+.magic-wand{will-change:transform,opacity}
+.magic-wand:before{filter:none;mix-blend-mode:normal}
+.crystal-staff{filter:none}
+.opening-spark,.wand-spark{box-shadow:0 0 5px #ffe8a0}
+/* Hide the lettering on the first paint, before the writing effect starts. */
+.book-name{clip-path:inset(0 100% 0 0)}
+@media(prefers-reduced-motion:reduce){.book-name{clip-path:none}}

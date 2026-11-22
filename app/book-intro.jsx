@@ -7,19 +7,22 @@ import IntroFrog from './intro-frog';
 
 export default function BookIntro({ config, onEnter }) {
   const root = useRef(null);
+  const writing = useRef(null);
   const [opening, setOpening] = useState(false);
   useEffect(() => {
     const context = gsap.context(() => {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const tl = gsap.timeline();
+      writing.current=tl;
+      const travel=root.current.querySelector('.book-lettering').clientWidth*.77;
       tl.fromTo('.book-name', {clipPath:'inset(0 100% 0 0)'}, {clipPath:'inset(0 0% 0 0)',duration:3.2,ease:'none'}, .6);
-      tl.fromTo('.magic-wand', {left:'8%',top:'55%',opacity:0}, {opacity:1,duration:.2}, .4);
-      tl.to('.magic-wand', {left:'85%',duration:3.2,ease:'none'}, .6);
-      tl.to('.magic-wand', {top:'48%',duration:.4,repeat:7,yoyo:true,ease:'sine.inOut'}, .6);
+      tl.fromTo('.magic-wand', {left:'8%',top:'55%',x:0,y:0,opacity:0}, {opacity:1,duration:.2}, .4);
+      tl.to('.magic-wand', {x:travel,duration:3.2,ease:'none'}, .6);
+      tl.to('.magic-wand', {y:-12,duration:.4,repeat:7,yoyo:true,ease:'sine.inOut'}, .6);
       tl.to('.magic-wand', {opacity:0,duration:.5}, 4);
       // A bounded particle pool follows the same writing path as the wand.
       root.current.querySelectorAll('.wand-spark').forEach((spark, index) => {
-        const start = .6 + index * .025;
+        const start = .6 + index * (3.2 / 48);
         const progress = (start - .6) / 3.2;
         const left = `${8 + progress * 77}%`;
         const top = `${51.5 + Math.cos(progress * Math.PI * 8) * 3.5}%`;
@@ -34,15 +37,17 @@ export default function BookIntro({ config, onEnter }) {
   }, []);
   useEffect(() => {
     if (!opening) return;
+    writing.current?.pause();
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) { onEnter(); return; }
     const context = gsap.context(() => {
       const stage = document.getElementById('invitation-stage');
       const book = root.current.querySelector('.enchanted-book');
       const page = root.current.querySelector('.book-paper');
-      gsap.set(book, {rotation:0});
+      gsap.set('.magic-wand, .wand-spark',{opacity:0});
+      gsap.set(book, {rotation:0,willChange:'transform'});
       const rect = book.getBoundingClientRect();
       const sx = rect.width / innerWidth, sy = rect.height / innerHeight;
-      gsap.set(stage, {visibility:'visible',zIndex:31,transformOrigin:'0 0',x:rect.left,y:rect.top,scaleX:sx,scaleY:sy,borderRadius:18});
+      gsap.set(stage, {visibility:'visible',willChange:'transform',zIndex:31,transformOrigin:'0 0',x:rect.left,y:rect.top,scaleX:sx,scaleY:sy,borderRadius:18});
       gsap.set(root.current, {background:'transparent',position:'fixed',inset:0,zIndex:32});
       gsap.set(page, {opacity:1,background:'transparent',boxShadow:'inset 0 0 28px #e8d9a866, 0 0 30px #dcca8544',borderColor:'#cabc83'});
       gsap.set(book, {transformOrigin:'0 0',filter:'none'});
@@ -61,7 +66,7 @@ export default function BookIntro({ config, onEnter }) {
         // Keep the physical page and its invitation aligned throughout the zoom.
         .to(stage,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:0,duration:1.5,ease:'power2.inOut'},.55)
         .to(book,{x:-rect.left,y:-rect.top,scaleX:1/sx,scaleY:1/sy,duration:1.5,ease:'power2.inOut'},.55)
-        .to(page,{borderColor:'transparent',boxShadow:'inset 0 0 0px #e8d9a800, 0 0 0px #dcca8500',duration:.35},1.9)
+        .to(page,{opacity:0,duration:.35},1.9)
         .to(root.current,{opacity:0,duration:.35},1.9);
     }, root);
     return () => {
@@ -72,7 +77,7 @@ export default function BookIntro({ config, onEnter }) {
   }, [opening, onEnter]);
   return <main ref={root} className="book-intro">
     {!opening && <IntroFrog />}
-    <div className="opening-sparks" aria-hidden="true">{Array.from({length:100},(_,index)=><span className="opening-spark" key={index}/>)}</div>
+    <div className="opening-sparks" aria-hidden="true">{Array.from({length:48},(_,index)=><span className="opening-spark" key={index}/>)}</div>
     <p className="eyebrow">CADA SUEÑO TIENE SU HISTORIA</p>
     <div className="book-perspective"><div className="enchanted-book" role="button" tabIndex={opening ? -1 : 0} aria-label="Abrir la invitación" aria-disabled={opening} onClick={() => { if (!opening) setOpening(true); }} onKeyDown={event => { if (!opening && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setOpening(true); } }}>
       <div className="book-paper" aria-hidden="true" />
@@ -89,7 +94,7 @@ export default function BookIntro({ config, onEnter }) {
           <g fill="none" stroke="#fff" opacity=".8"><path d="m40 3 2 28 2 38M14 18l11 21 12 26M66 19 55 40 44 65"/></g>
           <g fill="none" stroke="url(#staff-metal)" strokeWidth="3"><path d="M15 47Q40 91 65 47M22 54Q25 76 49 79Q65 59 40 53Q15 60 34 83M26 65Q43 59 54 68M31 88l17 2M32 94l16 2M35 161l10 2M35 168l10 2"/></g>
           <path d="m38 105 6 5-6 6 5 6-5 7 6 6-5 6" fill="none" stroke="#eddb9a" strokeWidth="1.5"/>
-        </svg></span><span className="wand-sparks" aria-hidden="true">{Array.from({length:128}, (_, index) => <span className="wand-spark" key={index} />)}</span></div>
+        </svg></span><span className="wand-sparks" aria-hidden="true">{Array.from({length:48}, (_, index) => <span className="wand-spark" key={index} />)}</span></div>
         <p className="book-celebration">{config.celebration}</p>
       </div></div>
     </div></div>
