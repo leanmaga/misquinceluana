@@ -47,6 +47,7 @@ export default function BookIntro({ config, onEnter }) {
       gsap.set(book, {rotation:0,willChange:'transform'});
       const rect = book.getBoundingClientRect();
       const sx = rect.width / innerWidth, sy = rect.height / innerHeight;
+      gsap.set(root.current.querySelector('.book-perspective'),{position:'fixed',left:rect.left,top:rect.top,width:rect.width,height:rect.height,margin:0});
       gsap.set(stage, {visibility:'visible',willChange:'transform',zIndex:31,transformOrigin:'0 0',x:rect.left,y:rect.top,scaleX:sx,scaleY:sy,borderRadius:18});
       gsap.set(root.current, {background:'transparent',position:'fixed',inset:0,zIndex:32});
       gsap.set(page, {opacity:1,background:'transparent',boxShadow:'inset 0 0 28px #e8d9a866, 0 0 30px #dcca8544',borderColor:'#cabc83'});
@@ -61,11 +62,11 @@ export default function BookIntro({ config, onEnter }) {
         gsap.to(spark,{opacity:0,scale:.1,duration:.65,delay:1.35+(index%7)*.035});
       });
       gsap.timeline({onComplete:onEnter})
-        .to('.book-cover',{rotationY:-170,duration:.9,ease:'sine.inOut'})
+        .to('.book-leaf',{rotationY:-165,duration:1.1,ease:'sine.inOut'})
         .to('.book-hint, .book-intro > .eyebrow',{opacity:0,duration:.3},0)
         // Keep the physical page and its invitation aligned throughout the zoom.
-        .to(stage,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:0,duration:1.5,ease:'power2.inOut'},.55)
-        .to(book,{x:-rect.left,y:-rect.top,scaleX:1/sx,scaleY:1/sy,duration:1.5,ease:'power2.inOut'},.55)
+        .to(stage,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:0,duration:1.25,ease:'power2.inOut'},.85)
+        .to(book,{x:-rect.left,y:-rect.top,scaleX:1/sx,scaleY:1/sy,duration:1.25,ease:'power2.inOut'},.85)
         .to(page,{opacity:0,duration:.35},1.9)
         .to(root.current,{opacity:0,duration:.35},1.9);
     }, root);
@@ -81,6 +82,7 @@ export default function BookIntro({ config, onEnter }) {
     <p className="eyebrow">CADA SUEÑO TIENE SU HISTORIA</p>
     <div className="book-perspective"><div className="enchanted-book" role="button" tabIndex={opening ? -1 : 0} aria-label="Abrir la invitación" aria-disabled={opening} onClick={() => { if (!opening) setOpening(true); }} onKeyDown={event => { if (!opening && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setOpening(true); } }}>
       <div className="book-paper" aria-hidden="true" />
+      <div className="book-leaf">
       <div className="book-cover">
         {config.bookCover && <img className="book-cover-image" src={config.bookCover} alt="" fetchPriority="high" />}
         <div className="book-border">
@@ -99,6 +101,8 @@ export default function BookIntro({ config, onEnter }) {
         </svg></span><span className="wand-sparks" aria-hidden="true">{Array.from({length:48}, (_, index) => <span className="wand-spark" key={index} />)}</span></div>
         <p className="book-celebration">{config.celebration}</p>
       </div></div>
+      <div className="book-cover-back" aria-hidden="true" />
+      </div>
     </div></div>
     <p className="book-hint" aria-live="polite">{opening ? 'Abriendo tu cuento…' : 'Tocá el libro para abrir la invitación'}</p>
   </main>;

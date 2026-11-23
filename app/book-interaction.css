@@ -35,8 +35,15 @@
 @media(prefers-reduced-motion:reduce){.book-name{clip-path:none}}
 .has-cover .book-perspective{width:min(270px,65vw)}
 .has-cover .enchanted-book{height:auto;aspect-ratio:736/1307}
-.has-cover .book-cover{padding:12px;isolation:isolate}
-.book-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 12px 12px 3px;z-index:-1}
+.has-cover .book-cover{padding:12px}
+.book-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 12px 12px 3px;z-index:0}
 .has-cover .book-border{position:relative;justify-content:flex-start;gap:4px;padding-top:16px;background:linear-gradient(#071b254d,transparent 30%);border-color:#e5d79e88;outline-color:#e5d79e44}
 .has-cover .book-name{font-size:clamp(38px,10vw,57px)!important;text-shadow:0 2px 4px #071b25,0 0 14px #071b25}
 .has-cover .book-celebration{font-size:8px;text-shadow:0 1px 4px #071b25}
+
+/* Both faces stay attached to the hinge while the cover turns. */
+.book-leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;z-index:2}
+.book-cover{transform:translateZ(1px);backface-visibility:hidden}
+.book-border{position:relative;z-index:1}
+.book-cover-back{position:absolute;inset:0;transform:rotateY(180deg) translateZ(1px);backface-visibility:hidden;border:6px solid #aa985e;border-radius:15px 5px 5px 15px;background:linear-gradient(90deg,#ded0a3,#f5ebca 20%,#e7dab3 85%,#b5a576);box-shadow:inset 0 0 25px #65502133}
+.book-cover-back:after{content:"";position:absolute;inset:14px;border:1px solid #ae995d88;border-radius:8px}
