@@ -33,3 +33,10 @@
 /* Hide the lettering on the first paint, before the writing effect starts. */
 .book-name{clip-path:inset(0 100% 0 0)}
 @media(prefers-reduced-motion:reduce){.book-name{clip-path:none}}
+.has-cover .book-perspective{width:min(270px,65vw)}
+.has-cover .enchanted-book{height:auto;aspect-ratio:736/1307}
+.has-cover .book-cover{padding:12px;isolation:isolate}
+.book-cover-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 12px 12px 3px;z-index:-1}
+.has-cover .book-border{position:relative;justify-content:flex-start;gap:4px;padding-top:16px;background:linear-gradient(#071b254d,transparent 30%);border-color:#e5d79e88;outline-color:#e5d79e44}
+.has-cover .book-name{font-size:clamp(38px,10vw,57px)!important;text-shadow:0 2px 4px #071b25,0 0 14px #071b25}
+.has-cover .book-celebration{font-size:8px;text-shadow:0 1px 4px #071b25}

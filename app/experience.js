@@ -157,7 +157,15 @@ export function initialize(config) {
     const storyShift=Math.sin(clamp(scroll/Math.max(1,pathTop-innerHeight))*Math.PI)*(mobile?.3:3.0);
     princess.position.x=THREE.MathUtils.lerp(storyShift,anchor.x,mix);
     princess.position.y=THREE.MathUtils.lerp(-1,anchor.y-2.3*scale,mix)+Math.sin(t*1.2)*.045;
-    princess.rotation.y=reduced?-.2:chapter*Math.PI*2+scroll/innerHeight*.25+Math.sin(t*.5)*.14;
+    // Finish the dance facing the guest as the final photo gives way to the closing text.
+    const finaleStart=centers[centers.length-1] ?? pathEnd;
+    const finale=THREE.MathUtils.smoothstep(viewCenter,finaleStart,Math.max(finaleStart+1,pathEnd+innerHeight*.1));
+    const danceYaw=chapter*Math.PI*2+Math.min(scroll,finaleStart-innerHeight*.5)/innerHeight*.25;
+    const finalDanceYaw=Math.max(0,centers.length-1)*Math.PI*2+(finaleStart-innerHeight*.5)/innerHeight*.25;
+    const frontYaw=Math.ceil(finalDanceYaw/(Math.PI*2))*Math.PI*2
+      +Math.atan2(camera.position.x-princess.position.x,camera.position.z-princess.position.z);
+    princess.rotation.y=reduced?THREE.MathUtils.lerp(-.2,Math.atan2(camera.position.x-princess.position.x,camera.position.z-princess.position.z),finale)
+      :THREE.MathUtils.lerp(danceYaw,frontYaw,finale)+Math.sin(t*.5)*.14*(1-finale);
     princess.rotation.z=Math.sin(t*.8+chapter)*.035;
     dancerPose.rotation.x=Math.sin(t*1.25+chapter)*.018;
     dancerPose.rotation.z=Math.sin(t+chapter)*.045;

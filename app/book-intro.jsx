@@ -75,13 +75,15 @@ export default function BookIntro({ config, onEnter }) {
       window.dispatchEvent(new Event('resize'));
     };
   }, [opening, onEnter]);
-  return <main ref={root} className="book-intro">
+  return <main ref={root} className={`book-intro${config.bookCover ? ' has-cover' : ''}`}>
     {!opening && <IntroFrog />}
     <div className="opening-sparks" aria-hidden="true">{Array.from({length:48},(_,index)=><span className="opening-spark" key={index}/>)}</div>
     <p className="eyebrow">CADA SUEÑO TIENE SU HISTORIA</p>
     <div className="book-perspective"><div className="enchanted-book" role="button" tabIndex={opening ? -1 : 0} aria-label="Abrir la invitación" aria-disabled={opening} onClick={() => { if (!opening) setOpening(true); }} onKeyDown={event => { if (!opening && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setOpening(true); } }}>
       <div className="book-paper" aria-hidden="true" />
-      <div className="book-cover"><div className="book-border">
+      <div className="book-cover">
+        {config.bookCover && <img className="book-cover-image" src={config.bookCover} alt="" fetchPriority="high" />}
+        <div className="book-border">
         <p className="eyebrow">UN CUENTO HECHO REALIDAD</p>
         <div className="book-lettering"><h1 className="book-name">{config.name}</h1><span className="magic-wand" aria-hidden="true"><svg viewBox="0 0 80 240" className="crystal-staff">
           <defs>
