@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { initialize } from './experience';
 import BookIntro from './book-intro';
+import Music from './music';
 
 const safeSource = value => typeof value === 'string' && (/^\/(?!\/)/.test(value) || /^https:\/\//.test(value));
 
@@ -28,20 +29,6 @@ function Countdown({ date, timezone, locale }) {
     </div>
     <p className="small">{remaining === 0 ? '¡Llegó el día de celebrar!' : 'Una noche. Mil recuerdos. Vos, conmigo.'}</p>
   </>;
-}
-
-function Music({ music }) {
-  const [opened, setOpened] = useState(false);
-  if (!music?.enabled) return null;
-  const localAudio = safeSource(music.src);
-  const videoId = /^[a-zA-Z0-9_-]{11}$/.test(music.youtubeId || '') ? music.youtubeId : null;
-  return <aside className="music-widget" aria-label="Música de la invitación">
-    {opened && <div className="music-panel" id="music-panel">
-      <div className="music-heading"><div><strong>{music.title}</strong><small>{music.artist}</small></div><button type="button" onClick={() => setOpened(false)} aria-label="Cerrar y detener música">×</button></div>
-      {localAudio ? <audio controls autoPlay loop src={music.src}>Tu navegador no admite audio.</audio> : videoId ? <><iframe title={music.title} src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&loop=1&playlist=${videoId}`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /><a href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer">Escuchar en YouTube ↗</a></> : <p>La música estará disponible pronto.</p>}
-    </div>}
-    <button className="music-toggle" type="button" aria-expanded={opened} aria-controls={opened ? 'music-panel' : undefined} onClick={() => setOpened(!opened)}><span aria-hidden="true">♫</span>{opened ? 'Cerrar música' : 'Escuchar la magia'}</button>
-  </aside>;
 }
 
 function ReplyForm({ config, kind }) {
@@ -96,7 +83,7 @@ function Invitation({ config }) {
   const query = encodeURIComponent(config.address || '');
   return <>
     <div id="scene" aria-hidden="true" /><div className="grain" />
-    <header><a className="monogram" href="#inicio" aria-label={`${config.name}, inicio`}>{config.name.slice(0, 1)}<span>✧</span></a><nav><a href="#historia">La noche</a><a href="#recuerdos">Mi historia</a><a href="#ubicacion">Cómo llegar</a>{config.gifts?.enabled && <a href="#regalos">Regalos</a>}</nav><a className="nav-rsvp" href="#rsvp">Confirmar asistencia <span>↗</span></a></header>
+    <header><a className="monogram" href="#inicio" aria-label={`${config.name}, inicio`}>{config.name.slice(0, 1)}<span>{config.age ?? 15}</span></a><nav><a href="#historia">La noche</a><a href="#recuerdos">Mi historia</a><a href="#ubicacion">Cómo llegar</a>{config.gifts?.enabled && <a href="#regalos">Regalos</a>}</nav><a className="nav-rsvp" href="#rsvp">Confirmar asistencia <span>↗</span></a></header>
     <main>
       <section id="inicio" className="hero"><div className="hero-top"><p className="eyebrow">{copy.heroEyebrow}</p><h1>{config.name}</h1><div className="xv"><span />{config.celebration.toUpperCase()}<span /></div></div><div className="hero-bottom"><p>{copy.heroQuote}</p><a className="scroll" href="#historia"><span>↓</span> DESLIZÁ Y DEJATE LLEVAR</a><div className="hero-note">{copy.heroNote}<span>✦</span></div></div></section>
       <section id="historia" className="story section"><div className="story-copy reveal"><p className="eyebrow">EL SUEÑO</p><Heading title={copy.storyTitle} accent={copy.storyAccent} />{copy.storyParagraphs.map((text, i) => <p key={i}>{text}</p>)}<span className="signature">Con amor, {config.name}</span></div></section>
@@ -117,13 +104,13 @@ function Invitation({ config }) {
       <Gifts gifts={config.gifts} />
       <footer><p className="eyebrow">{copy.footerEyebrow}</p><a href="#inicio">{config.name}<span>✧</span></a><p>{config.celebration} · Una noche encantada</p><small>{copy.footerNote}</small></footer>
     </main>
-    <Music music={config.music} />
     <dialog ref={dialog} id="lightbox" aria-label="Recuerdo ampliado" onClick={event => { if (event.target === event.currentTarget) dialog.current.close(); }}><button aria-label="Cerrar galería" onClick={() => dialog.current.close()}>×</button>{selectedPhoto && <img src={selectedPhoto.src} alt={selectedPhoto.alt} />}</dialog>
   </>;
 }
 
 export default function Home() {
   const [entered, setEntered] = useState(false);
+  const [chosen, setChosen] = useState(false);
   useEffect(() => {
     if (!entered) return;
     const frame=requestAnimationFrame(()=>window.dispatchEvent(new Event('invitation:opened')));
@@ -143,6 +130,6 @@ export default function Home() {
     return () => controller.abort();
   }, []);
   if (!config) return <main className="loading-invitation"><span>✧</span><p>{failed ? 'No pudimos abrir la invitación. Revisá la configuración e intentá de nuevo.' : 'La magia está por comenzar…'}</p>{failed && <button onClick={() => window.location.reload()}>Volver a intentar</button>}<noscript>Activá JavaScript para abrir la invitación.</noscript></main>;
-  return <><div id="invitation-stage" inert={!entered} style={entered ? undefined : {position:'fixed',inset:0,visibility:'hidden',overflow:'hidden'}}><Invitation config={config} /></div>{!entered && <BookIntro config={config} onEnter={() => setEntered(true)} />}</>;
+  return <><div id="invitation-stage" inert={!entered} style={entered ? undefined : {position:'fixed',inset:0,visibility:'hidden',overflow:'hidden'}}><Invitation config={config} /></div>{chosen && !entered && <BookIntro config={config} onEnter={() => setEntered(true)} />}<Music music={config.music} onChoose={() => setChosen(true)} /></>;
 }
 
